@@ -1,11 +1,8 @@
 #ifndef EVM_H
 #define EVM_H
 
-#include "opencv2/imgproc.hpp"
-#include "opencv2/core.hpp"
-#include "opencv2/imgcodecs.hpp"
-#include "opencv2/highgui.hpp"
-#include "fftw3.h"
+#include <opencv2/opencv.hpp>
+
 namespace my {
 
 /**
@@ -16,18 +13,25 @@ class evm
 {
 public:
     /**
-     * @brief Reduz a resolução da imagem usando pyramidal down.
-     * @param lab_img Imagem no espaço de cor LAB.
+     * @brief Reduz a resolução da imagem usando pyrDown.
+     * @param img Imagem de entrada.
      * @return Imagem com resolução reduzida.
      */
-    cv::Mat pyr_down(const cv::Mat& lab_img) const;
+    cv::Mat pyr_down(const cv::Mat& img) const;
+
+    /**
+     * @brief Aumenta a resolução da imagem usando pyrUp.
+     * @param img Imagem de entrada.
+     * @return Imagem com resolução aumentada.
+     */
+    cv::Mat pyr_up(const cv::Mat& img) const;
 
     /**
      * @brief Aplica a Transformada Rápida de Fourier (FFT) em uma imagem.
-     * @param channel Imagem ou canal da imagem.
+     * @param input Imagem de entrada.
      * @return Imagem no domínio da frequência.
      */
-	 cv::Mat applyFFT(const cv::Mat& input) const;
+    cv::Mat applyFFT(const cv::Mat& input) const;
 
     /**
      * @brief Aplica um filtro passa-banda em uma imagem no domínio da frequência.
@@ -38,27 +42,21 @@ public:
      * @return Imagem filtrada no domínio da frequência.
      */
     cv::Mat applyDualLowPassFilter(const cv::Mat& dft_img, float lowFreq, float highFreq, float fps) const;
-    //cv::Mat applyBandpassFilter(const cv::Mat& dft_img, float lowFreq, float highFreq, float fps);
+
     /**
      * @brief Realiza a transformada inversa de Fourier para converter a imagem de volta ao domínio do tempo.
-     * @param filtered Imagem filtrada no domínio da frequência.
+     * @param input Imagem filtrada no domínio da frequência.
      * @return Imagem no domínio do tempo.
      */
     cv::Mat applyIFFT(const cv::Mat& input) const;
 
     /**
-     * @brief Amplifica a imagem por um fator de 100.
-     * @param inverseTransform Imagem resultante da transformada inversa de Fourier.
+     * @brief Amplifica a imagem por um fator específico.
+     * @param image Imagem resultante da transformada inversa de Fourier.
+     * @param alpha Fator de amplificação.
      * @return Imagem amplificada.
      */
-    cv::Mat ampImg(const cv::Mat& inverseTransform) const;
-
-    /**
-     * @brief Aumenta a resolução da imagem usando pyramidal up.
-     * @param amp_img Imagem amplificada.
-     * @return Imagem com resolução aumentada.
-     */
-    cv::Mat pyr_up(const cv::Mat& amp_img) const;
+    cv::Mat ampImg(const cv::Mat& image, float alpha) const;
 
     /**
      * @brief Processa um canal da imagem aplicando as transformações necessárias.
@@ -66,13 +64,12 @@ public:
      * @param lowFreq Frequência baixa do filtro.
      * @param highFreq Frequência alta do filtro.
      * @param fps Frames por segundo do vídeo (usado para cálculo das frequências).
+     * @param alpha Fator de amplificação.
      * @return Imagem processada.
      */
-    cv::Mat processChannel(const cv::Mat& channel, float lowFreq, float highFreq, float fps);
+    cv::Mat processChannel(const cv::Mat& channel, float lowFreq, float highFreq, float fps, float alpha);
 };
 
 }
 
 #endif // EVM_H
-
-

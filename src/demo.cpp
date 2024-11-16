@@ -1,17 +1,16 @@
 #include "FaceDetection.hpp"
+#include "evm.hpp"
 #include <iostream>
 #include <opencv2/highgui.hpp>
-#include "evm.hpp"
 #include <opencv2/imgproc.hpp>
 
-#define SHOW_FPS    (1)
+#define SHOW_FPS (1)
 
 #if SHOW_FPS
 #include <chrono>
 #endif
 
 const std::string GSTREAMER_PIPELINE = "nvarguscamerasrc ! video/x-raw(memory:NVMM), width=(int)640, height=(int)360, format=(string)NV12, framerate=(fraction)30/1 ! nvvidconv flip-method=2 ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink";
-
 
 int main(int argc, char* argv[]) {
     my::FaceDetection faceDetector("/home/aldo/Documentos/media_pipe-main/models");
@@ -23,85 +22,82 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    #if SHOW_FPS
+#if SHOW_FPS
     float sum = 0;
     int count = 0;
-    #endif
+    float fps = 0;
+#endif
 
-    while (success) {
-        cv::Mat rframe;
-        success = cap.read(rframe);
+    // Definir as frequências de corte de acordo com o FPS esperado
+    float lowFreq = 0.83f; // Frequência cardíaca mínima (~50 bpm)
+    float highFreq = 3.0f; // Frequência cardíaca máxima (~180 bpm)
+    float alpha = 50.0f;   // Fator de amplificação
+
+    while (true) {
+        cv::Mat frame;
+        success = cap.read(frame);
         if (!success) break;
-        cv::flip(rframe, rframe, 1);
+        cv::flip(frame, frame, 1);
 
-        #if SHOW_FPS
+#if SHOW_FPS
         auto start = std::chrono::high_resolution_clock::now();
-        #endif
+#endif
 
-        faceDetector.loadImageToInput(rframe);
+        faceDetector.loadImageToInput(frame);
         faceDetector.runInference();
 
-        #if SHOW_FPS
+#if SHOW_FPS
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
         float inferenceTime = duration.count() / 1e3;
         sum += inferenceTime;
         count += 1;
-        int fps = (int)1e3 / inferenceTime;
-        cv::putText(rframe, std::to_string(fps), cv::Point(20, 70), cv::FONT_HERSHEY_PLAIN, 3, cv::Scalar(0, 196, 255), 2);
-        #endif
+        fps = 1e3f / inferenceTime;
+        cv::putText(frame, std::to_string(static_cast<int>(fps)) + " FPS", cv::Point(20, 70), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 196, 255), 2);
+#endif
 
         cv::Rect roi = faceDetector.getFaceRoi();
         if (roi.width > 0 && roi.height > 0) {
             cv::Mat croppedFace = faceDetector.cropFrame(roi);
 
-            // Processamento diretamente no espaço de cor BGR (sem conversão)
-            std::vector<cv::Mat> bgr_channels;
-            cv::split(croppedFace, bgr_channels); 
+            // Converter para o espaço de cor YCrCb para separar luminância de crominância
+            cv::Mat ycrcb_face;
+            cv::cvtColor(croppedFace, ycrcb_face, cv::COLOR_BGR2YCrCb);
 
-            //cv::Mat b_channel = bgr_channels[0];
-            //cv::Mat g_channel = bgr_channels[1];
-           // cv::Mat r_channel = bgr_channels[2];
-           // float lowFreq = 0.83, highFreq = 3, video_fps = 2000;
-            float lowFreq = 20, highFreq = 40, video_fps = fps;
-            std::cout << "Processando b" << std::endl;
-            cv::Mat b_channel = evm_processor.processChannel(bgr_channels[0], lowFreq, highFreq, video_fps);
-            std::cout << "Processando g" << std::endl;
-            cv::Mat g_channel = evm_processor.processChannel(bgr_channels[1], lowFreq, highFreq, video_fps);
-            std::cout << "Processando Cb" << std::endl;
-            cv::Mat r_channel = evm_processor.processChannel(bgr_channels[2], lowFreq, highFreq, video_fps);
+            std::vector<cv::Mat> ycrcb_channels;
+            cv::split(ycrcb_face, ycrcb_channels);
 
-            // Normalização dos canais BGR
-            cv::normalize(b_channel, b_channel, 0, 255, cv::NORM_MINMAX);
-            cv::normalize(g_channel, g_channel, 0, 255, cv::NORM_MINMAX);
-            cv::normalize(r_channel, r_channel, 0, 255, cv::NORM_MINMAX);
+            // Processar apenas o canal de crominância (Cr ou Cb)
+            std::cout << "Processando canal Cb" << std::endl;
+            cv::Mat processed_channel = evm_processor.processChannel(ycrcb_channels[2], lowFreq, highFreq, fps, alpha); // Usando o canal Cb
 
-            // Convertendo para CV_8U para visualização
-            b_channel.convertTo(b_channel, CV_8U);
-            g_channel.convertTo(g_channel, CV_8U);
-            r_channel.convertTo(r_channel, CV_8U);
+            // Substituir o canal processado na imagem
+            ycrcb_channels[2] = processed_channel;
+            cv::Mat processed_ycrcb;
+            cv::merge(ycrcb_channels, processed_ycrcb);
 
-            std::vector<cv::Mat> merged_bgr = {b_channel, g_channel, r_channel};
+            // Converter de volta para BGR para visualização
             cv::Mat processed_bgr;
-            cv::merge(merged_bgr, processed_bgr); 
+            cv::cvtColor(processed_ycrcb, processed_bgr, cv::COLOR_YCrCb2BGR);
 
-            // A imagem já está em BGR, então não é necessária a conversão de volta
+            // Exibir a imagem processada
             cv::imshow("Enhanced Face", processed_bgr);
+
+            // Opcional: desenhar o ROI na imagem original
+            cv::rectangle(frame, roi, cv::Scalar(0, 255, 0), 2);
+            cv::imshow("Face Detector", frame);
         } else {
-            cv::imshow("Face Detector", rframe);
+            cv::imshow("Face Detector", frame);
         }
 
-
-        if (cv::waitKey(10) == 27) break;  // Exit if 'ESC' is pressed
+        if (cv::waitKey(10) == 27) break;  // Sair se 'ESC' for pressionado
     }
 
-    #if SHOW_FPS
-    std::cout << "Average inference time: " << sum / count << "ms" << std::endl;
-    #endif
+#if SHOW_FPS
+    std::cout << "Average inference time: " << sum / count << " ms" << std::endl;
+#endif
 
     cap.release();
     cv::destroyAllWindows();
     return 0;
 }
-
-
