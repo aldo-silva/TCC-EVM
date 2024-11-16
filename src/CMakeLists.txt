@@ -42,6 +42,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     tensorflow-lite
     dl
     pthread
-    fftw3  # Nome da biblioteca diretamente
+    fftw3f  # Nome da biblioteca diretamente
 )
 
