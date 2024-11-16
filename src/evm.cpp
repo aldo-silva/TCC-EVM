@@ -4,6 +4,29 @@
 
 namespace my {
 
+void fftShift(const cv::Mat& input, cv::Mat& output) {
+    output = input.clone();
+    int cx = output.cols / 2;
+    int cy = output.rows / 2;
+
+    cv::Mat q0(output, cv::Rect(0, 0, cx, cy));   // Top-Left
+    cv::Mat q1(output, cv::Rect(cx, 0, cx, cy));  // Top-Right
+    cv::Mat q2(output, cv::Rect(0, cy, cx, cy));  // Bottom-Left
+    cv::Mat q3(output, cv::Rect(cx, cy, cx, cy)); // Bottom-Right
+
+    // Swap quadrants (Top-Left with Bottom-Right)
+    cv::Mat tmp;
+    q0.copyTo(tmp);
+    q3.copyTo(q0);
+    tmp.copyTo(q3);
+
+    // Swap quadrants (Top-Right with Bottom-Left)
+    q1.copyTo(tmp);
+    q2.copyTo(q1);
+    tmp.copyTo(q2);
+}
+
+
 // Função para aplicar FFT usando FFTW
 cv::Mat evm::applyFFT(const cv::Mat& input) const {
     std::cout << "Entrando na FFT com " << input.channels() << " canais." << std::endl;
@@ -42,7 +65,7 @@ cv::Mat evm::applyFFT(const cv::Mat& input) const {
 
     // Centralização dos dados da FFT (shifting quadrants)
     cv::Mat shifted_dft;
-    cv::fftShift(dft_img, shifted_dft);
+    fftShift(dft_img, shifted_dft);
 
     fftwf_destroy_plan(p);
     fftwf_free(in);
@@ -62,7 +85,7 @@ cv::Mat evm::applyIFFT(const cv::Mat& input) const {
 
     // Descentralizar os dados antes da IFFT
     cv::Mat input_descentralized;
-    cv::fftShift(input, input_descentralized);
+    fftShift(input, input_descentralized);
 
     fftwf_complex *in = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * rows * cols);
     fftwf_complex *out = (fftwf_complex*) fftwf_malloc(sizeof(fftwf_complex) * rows * cols);
