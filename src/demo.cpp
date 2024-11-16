@@ -60,9 +60,17 @@ int main(int argc, char* argv[]) {
         if (roi.width > 0 && roi.height > 0) {
             cv::Mat croppedFace = faceDetector.cropFrame(roi);
 
+            float widthFraction = 0.5f;
+            float heightFraction = 0.25f;
+
             // Define the forehead region within the face ROI
-            int foreheadHeight = static_cast<int>(roi.height * 0.25);
-            cv::Rect foreheadRoi(0, 0, roi.width, foreheadHeight); // x=0, y=0 since it's relative to croppedFace
+            int foreheadWidth = static_cast<int>(roi.width * widthFraction);
+            int foreheadHeight = static_cast<int>(roi.height * heightFraction);
+
+            int x = (roi.width - foreheadWidth) / 2; // Centered horizontally
+            int y = 0; // Start at the top of the face ROI
+
+            cv::Rect foreheadRoi(x, y, foreheadWidth, foreheadHeight); // x=0, y=0 since it's relative to croppedFace
 
             foreheadRoi &= cv::Rect(0, 0, croppedFace.cols, croppedFace.rows);
 
