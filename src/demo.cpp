@@ -60,15 +60,23 @@ int main(int argc, char* argv[]) {
         if (roi.width > 0 && roi.height > 0) {
             cv::Mat croppedFace = faceDetector.cropFrame(roi);
 
-            // Converter para o espaço de cor YCrCb para separar luminância de crominância
-            cv::Mat ycrcb_face;
-            cv::cvtColor(croppedFace, ycrcb_face, cv::COLOR_BGR2YCrCb);
+            // Define the forehead region within the face ROI
+            int foreheadHeight = static_cast<int>(roi.height * 0.25);
+            cv::Rect foreheadRoi(0, 0, roi.width, foreheadHeight); // x=0, y=0 since it's relative to croppedFace
+
+            foreheadRoi &= cv::Rect(0, 0, croppedFace.cols, croppedFace.rows);
+
+            cv::Mat croppedForehead = croppedFace(foreheadRoi);
+
+
+            cv::Mat ycrcb_forehead;
+            cv::cvtColor(croppedForehead, ycrcb_forehead, cv::COLOR_BGR2YCrCb);
 
             std::vector<cv::Mat> ycrcb_channels;
-            cv::split(ycrcb_face, ycrcb_channels);
+            cv::split(ycrcb_forehead, ycrcb_channels);
 
             // Processar apenas o canal de crominância (Cr ou Cb)
-            std::cout << "Processando canal Cb" << std::endl;
+            std::cout << "Processando canal Cb da testa" << std::endl;
             cv::Mat processed_channel = evm_processor.processChannel(ycrcb_channels[2], lowFreq, highFreq, fps, alpha); // Usando o canal Cb
 
             // Substituir o canal processado na imagem
