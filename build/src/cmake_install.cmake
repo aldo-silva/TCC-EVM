@@ -1,4 +1,4 @@
-# Install script for directory: /home/aldo/Documentos/TCC2/src
+# Install script for directory: /home/aldo/Documentos/TCC-EVM/src
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)

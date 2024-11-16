@@ -4,11 +4,11 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/aldo/Documentos/TCC2/src/DetectionPostProcess.cpp" "/home/aldo/Documentos/TCC2/build/src/CMakeFiles/demo.dir/DetectionPostProcess.cpp.o"
-  "/home/aldo/Documentos/TCC2/src/FaceDetection.cpp" "/home/aldo/Documentos/TCC2/build/src/CMakeFiles/demo.dir/FaceDetection.cpp.o"
-  "/home/aldo/Documentos/TCC2/src/ModelLoader.cpp" "/home/aldo/Documentos/TCC2/build/src/CMakeFiles/demo.dir/ModelLoader.cpp.o"
-  "/home/aldo/Documentos/TCC2/src/demo.cpp" "/home/aldo/Documentos/TCC2/build/src/CMakeFiles/demo.dir/demo.cpp.o"
-  "/home/aldo/Documentos/TCC2/src/evm.cpp" "/home/aldo/Documentos/TCC2/build/src/CMakeFiles/demo.dir/evm.cpp.o"
+  "/home/aldo/Documentos/TCC-EVM/src/DetectionPostProcess.cpp" "/home/aldo/Documentos/TCC-EVM/build/src/CMakeFiles/demo.dir/DetectionPostProcess.cpp.o"
+  "/home/aldo/Documentos/TCC-EVM/src/FaceDetection.cpp" "/home/aldo/Documentos/TCC-EVM/build/src/CMakeFiles/demo.dir/FaceDetection.cpp.o"
+  "/home/aldo/Documentos/TCC-EVM/src/ModelLoader.cpp" "/home/aldo/Documentos/TCC-EVM/build/src/CMakeFiles/demo.dir/ModelLoader.cpp.o"
+  "/home/aldo/Documentos/TCC-EVM/src/demo.cpp" "/home/aldo/Documentos/TCC-EVM/build/src/CMakeFiles/demo.dir/demo.cpp.o"
+  "/home/aldo/Documentos/TCC-EVM/src/evm.cpp" "/home/aldo/Documentos/TCC-EVM/build/src/CMakeFiles/demo.dir/evm.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

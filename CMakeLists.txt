@@ -1,25 +1,22 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.18)  # Atualizado para 3.18 para compatibilidade com o src/CMakeLists.txt
 project(IrisLandmarkDemo)
 
-# Define the C++ standard
+# Define o padrão C++
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-
-# Finding packages
+# Encontrar pacotes
 find_package(OpenCV REQUIRED)
 
-# Include directories for CUDA, OpenCV
-include_directories(${OpenCV_INCLUDE_DIRS} ${CUDAToolkit_INCLUDE_DIRS})
+# Incluir diretórios para OpenCV
+include_directories(${OpenCV_INCLUDE_DIRS})
 
-# Define your application's executable
-set(APP_NAME "demo")
-add_subdirectory(src)  # Adiciona o subdiretório que contém mais CMakeLists.txt ou código-fonte
+# Adiciona o subdiretório src que contém seu executável
+add_subdirectory(src)
 
-# Print package versions to help with debugging and ensuring correct versions
+# Mensagens para depuração
 message(STATUS "OpenCV version: ${OpenCV_VERSION}")
 
-# Linking libraries
-target_link_libraries(${APP_NAME} PRIVATE)
-
+# Remover ou comentar a linha abaixo, pois está incompleta e desnecessária
+# target_link_libraries(${APP_NAME} PRIVATE)
 
