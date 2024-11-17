@@ -29,7 +29,7 @@ void fftShift(const cv::Mat& input, cv::Mat& output) {
 
 // Função para aplicar FFT usando FFTW
 cv::Mat evm::applyFFT(const cv::Mat& input) const {
-    std::cout << "Entrando na FFT com " << input.channels() << " canais." << std::endl;
+    // std::cout << "Entrando na FFT com " << input.channels() << " canais." << std::endl;
     CV_Assert(input.type() == CV_32FC1);
 
     int rows = input.rows;
@@ -71,13 +71,13 @@ cv::Mat evm::applyFFT(const cv::Mat& input) const {
     fftwf_free(in);
     fftwf_free(out);
 
-    std::cout << "Saindo da FFT com " << shifted_dft.channels() << " canais." << std::endl;
+    // std::cout << "Saindo da FFT com " << shifted_dft.channels() << " canais." << std::endl;
     return shifted_dft;
 }
 
 // Função para aplicar IFFT usando FFTW
 cv::Mat evm::applyIFFT(const cv::Mat& input) const {
-    std::cout << "Entrando na IFFT com " << input.channels() << " canais." << std::endl;
+    // std::cout << "Entrando na IFFT com " << input.channels() << " canais." << std::endl;
     CV_Assert(input.type() == CV_32FC2);
 
     int rows = input.rows;
@@ -118,12 +118,12 @@ cv::Mat evm::applyIFFT(const cv::Mat& input) const {
     fftwf_free(in);
     fftwf_free(out);
 
-    std::cout << "Saindo da IFFT com " << ifft_img.channels() << " canais." << std::endl;
+    // std::cout << "Saindo da IFFT com " << ifft_img.channels() << " canais." << std::endl;
     return ifft_img;
 }
 
 cv::Mat evm::applyDualLowPassFilter(const cv::Mat& dft_img, float lowCutoffFreq, float highCutoffFreq, float fps) const {
-    std::cout << "applyDualLowPassFilter - Input channels: " << dft_img.channels() << std::endl;
+    // std::cout << "applyDualLowPassFilter - Input channels: " << dft_img.channels() << std::endl;
     CV_Assert(dft_img.type() == CV_32FC2);
 
     int rows = dft_img.rows;
@@ -171,19 +171,19 @@ cv::Mat evm::ampImg(const cv::Mat& image, float alpha) const {
 cv::Mat evm::pyr_up(const cv::Mat& img) const {
     cv::Mat img_up;
     cv::pyrUp(img, img_up);
-    std::cout << "pyr_up - Output size: " << img_up.size() << ", channels: " << img_up.channels() << std::endl;
+    // std::cout << "pyr_up - Output size: " << img_up.size() << ", channels: " << img_up.channels() << std::endl;
     return img_up;
 }
 
 cv::Mat evm::pyr_down(const cv::Mat& img) const {
     cv::Mat img_down;
     cv::pyrDown(img, img_down);
-    std::cout << "pyr_down - Output size: " << img_down.size() << ", channels: " << img_down.channels() << std::endl;
+    // std::cout << "pyr_down - Output size: " << img_down.size() << ", channels: " << img_down.channels() << std::endl;
     return img_down;
 }
 
 cv::Mat evm::processChannel(const cv::Mat& channel, float lowFreq, float highFreq, float fps, float alpha) {
-    std::cerr << "Processando o canal em processChannel" << std::endl;
+    // std::cerr << "Processando o canal em processChannel" << std::endl;
     
     // Convert to float
     cv::Mat channel_float;
@@ -197,16 +197,16 @@ cv::Mat evm::processChannel(const cv::Mat& channel, float lowFreq, float highFre
     // Apply pyrDown
     cv::Mat reducedChannel = pyr_down(adjusted_channel);
 
-    std::cerr << "Aplicando a FFT" << std::endl;
+    // std::cerr << "Aplicando a FFT" << std::endl;
     cv::Mat fft_result = applyFFT(reducedChannel);
 
-    std::cerr << "Aplicando o filtro" << std::endl;
+    // std::cerr << "Aplicando o filtro" << std::endl;
     cv::Mat filtered_result = applyDualLowPassFilter(fft_result, lowFreq, highFreq, fps);
 
-    std::cerr << "Aplicando a IFFT" << std::endl;
+    // std::cerr << "Aplicando a IFFT" << std::endl;
     cv::Mat ifft_result = applyIFFT(filtered_result);
 
-    std::cerr << "Amplificando a imagem" << std::endl;
+    // std::cerr << "Amplificando a imagem" << std::endl;
     cv::Mat amplified = ampImg(ifft_result, alpha);
 
     // Apply pyrUp
