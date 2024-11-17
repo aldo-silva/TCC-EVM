@@ -106,13 +106,13 @@ int main(int argc, char* argv[]) {
 
             // **Splitting RGB Channels After Processing**
             std::vector<cv::Mat> rgb_channels;
-            cv::split(croppedFace, rgb_channels);
+            cv::split(processed_bgr, rgb_channels);
 
             cv::imshow("Red Channel", rgb_channels[2]);
             cv::imshow("Green Channel", rgb_channels[1]);
             cv::imshow("Blue Channel", rgb_channels[0]);
 
-            croppedFace.copyTo(frame(roi));
+            // croppedFace.copyTo(frame(roi));
 
             // Exibir a imagem processada
             cv::imshow("Enhanced Face", croppedFace);
