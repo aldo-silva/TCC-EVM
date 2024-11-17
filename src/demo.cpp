@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
             // croppedFace.copyTo(frame(roi));
 
             // Exibir a imagem processada
-            cv::imshow("Enhanced Face", croppedFace);
+            cv::imshow("Enhanced Face", processed_bgr);
 
             // Opcional: desenhar o ROI na imagem original
             cv::rectangle(frame, roi, cv::Scalar(0, 255, 0), 2);
