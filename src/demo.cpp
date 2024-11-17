@@ -93,7 +93,7 @@ int main(int argc, char* argv[]) {
             cv::split(ycrcb_forehead, ycrcb_channels);
 
             // Processar apenas o canal de crominância (Cr ou Cb)
-            std::cout << "Processando canal Cb da testa" << std::endl;
+            // std::cout << "Processando canal Cb da testa" << std::endl;
             cv::Mat processed_channel = evm_processor.processChannel(ycrcb_channels[2], lowFreq, highFreq, fps, alpha); // Usando o canal Cb
 
             // Substituir o canal processado na imagem
@@ -110,6 +110,9 @@ int main(int argc, char* argv[]) {
             // **Splitting RGB Channels After Processing**
             std::vector<cv::Mat> rgb_channels;
             cv::split(processed_bgr, rgb_channels);
+
+            // Add frame data to signal processor
+            signalProcessor.addFrameData(rgb_channels);
 
             // cv::imshow("Red Channel", rgb_channels[2]);
             // cv::imshow("Green Channel", rgb_channels[1]);
