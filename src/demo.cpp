@@ -67,6 +67,12 @@ int main(int argc, char* argv[]) {
             int foreheadWidth = static_cast<int>(roi.width * widthFraction);
             int foreheadHeight = static_cast<int>(roi.height * heightFraction);
 
+            foreheadWidth -= foreheadWidth % 2;
+            foreheadHeight -= foreheadHeight % 2;
+
+            if (foreheadWidth < 2) foreheadWidth = 2;
+            if (foreheadHeight < 2) foreheadHeight = 2;
+
             int x = (roi.width - foreheadWidth) / 2; // Centered horizontally
             int y = 0; // Start at the top of the face ROI
 

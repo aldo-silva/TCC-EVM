@@ -184,11 +184,18 @@ cv::Mat evm::pyr_down(const cv::Mat& img) const {
 
 cv::Mat evm::processChannel(const cv::Mat& channel, float lowFreq, float highFreq, float fps, float alpha) {
     std::cerr << "Processando o canal em processChannel" << std::endl;
+    
+    // Convert to float
     cv::Mat channel_float;
     channel.convertTo(channel_float, CV_32FC1);
 
-    // Aplicar redução de tamanho usando pyrDown antes da FFT
-    cv::Mat reducedChannel = pyr_down(channel_float);
+    // Adjust image size to have even dimensions
+    int new_rows = channel_float.rows - (channel_float.rows % 2);
+    int new_cols = channel_float.cols - (channel_float.cols % 2);
+    cv::Mat adjusted_channel = channel_float(cv::Rect(0, 0, new_cols, new_rows));
+
+    // Apply pyrDown
+    cv::Mat reducedChannel = pyr_down(adjusted_channel);
 
     std::cerr << "Aplicando a FFT" << std::endl;
     cv::Mat fft_result = applyFFT(reducedChannel);
@@ -202,21 +209,29 @@ cv::Mat evm::processChannel(const cv::Mat& channel, float lowFreq, float highFre
     std::cerr << "Amplificando a imagem" << std::endl;
     cv::Mat amplified = ampImg(ifft_result, alpha);
 
-    // Aumentar a resolução para o tamanho original
+    // Apply pyrUp
     cv::Mat upsampled = pyr_up(amplified);
 
-    // Garantir que o tamanho seja igual ao do canal original
-    cv::resize(upsampled, upsampled, channel.size());
+    // Resize upsampled image to match the adjusted_channel size
+    if (upsampled.size() != adjusted_channel.size()) {
+        cv::resize(upsampled, upsampled, adjusted_channel.size());
+    }
 
-    // Combinar o canal original com o amplificado
+    // Combine with the adjusted_channel
     cv::Mat result;
-    cv::add(channel_float, upsampled, result);
+    cv::add(adjusted_channel, upsampled, result);
 
-    // Normalizar e converter para o tipo original
+    // Ensure result matches the original channel size
+    if (result.size() != channel.size()) {
+        cv::resize(result, result, channel.size());
+    }
+
+    // Normalize and convert back to original type
     cv::normalize(result, result, 0, 255, cv::NORM_MINMAX);
     result.convertTo(result, channel.type());
 
     return result;
 }
+
 
 } // namespace my
