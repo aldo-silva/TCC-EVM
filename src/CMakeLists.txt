@@ -45,5 +45,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     dl
     pthread
     fftw3f  # Nome da biblioteca diretamente
+    fftw3
 )
 
