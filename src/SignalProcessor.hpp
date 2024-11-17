@@ -50,6 +50,11 @@ private:
     // Helper function to compute frequency
     double computeDominantFrequency(const std::deque<double>& signal, double fps);
 
+    // Helper functions for signal preprocessing
+    void detrend(std::deque<double>& signal);
+    void applyHammingWindow(std::deque<double>& signal);
+    void normalizeSignal(std::deque<double>& signal);
+
 };
 
 } // namespace my
