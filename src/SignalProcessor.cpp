@@ -2,6 +2,7 @@
 #include <numeric>
 #include <algorithm>
 #include <fftw3.h>
+#include <cmath> // For M_PI
 
 namespace my {
 
@@ -15,34 +16,28 @@ SignalProcessor::~SignalProcessor() {
 }
 
 void SignalProcessor::addFrameData(const std::vector<cv::Mat>& rgb_channels) {
-    // Compute mean and std dev for each channel
+    // Compute mean for each channel
     for (int i = 0; i < 3; ++i) {
-        cv::Scalar mean, stddev;
-        cv::meanStdDev(rgb_channels[i], mean, stddev);
+        cv::Scalar mean;
+        mean = cv::mean(rgb_channels[i]);
 
         switch (i) {
             case 0: // Blue channel
                 blueChannelMeans.push_back(mean[0]);
-                blueChannelStdDevs.push_back(stddev[0]);
                 if (blueChannelMeans.size() > maxBufferSize) {
                     blueChannelMeans.pop_front();
-                    blueChannelStdDevs.pop_front();
                 }
                 break;
             case 1: // Green channel
                 greenChannelMeans.push_back(mean[0]);
-                greenChannelStdDevs.push_back(stddev[0]);
                 if (greenChannelMeans.size() > maxBufferSize) {
                     greenChannelMeans.pop_front();
-                    greenChannelStdDevs.pop_front();
                 }
                 break;
             case 2: // Red channel
                 redChannelMeans.push_back(mean[0]);
-                redChannelStdDevs.push_back(stddev[0]);
                 if (redChannelMeans.size() > maxBufferSize) {
                     redChannelMeans.pop_front();
-                    redChannelStdDevs.pop_front();
                 }
                 break;
         }
@@ -61,28 +56,80 @@ const std::deque<double>& SignalProcessor::getBlueChannelMeans() const {
     return blueChannelMeans;
 }
 
-const std::deque<double>& SignalProcessor::getRedChannelStdDevs() const {
-    return redChannelStdDevs;
+void SignalProcessor::detrend(std::deque<double>& signal) {
+    int N = signal.size();
+    if (N < 2) return;
+
+    // Compute linear fit (least squares)
+    double sumX = 0.0;
+    double sumY = 0.0;
+    double sumX2 = 0.0;
+    double sumXY = 0.0;
+    for (int i = 0; i < N; ++i) {
+        sumX += i;
+        sumY += signal[i];
+        sumX2 += i * i;
+        sumXY += i * signal[i];
+    }
+    double denom = N * sumX2 - sumX * sumX;
+    if (denom == 0) return; // Prevent division by zero
+
+    double a = (N * sumXY - sumX * sumY) / denom;
+    double b = (sumY * sumX2 - sumX * sumXY) / denom;
+
+    // Remove the trend
+    for (int i = 0; i < N; ++i) {
+        double trend = a * i + b;
+        signal[i] -= trend;
+    }
 }
 
-const std::deque<double>& SignalProcessor::getGreenChannelStdDevs() const {
-    return greenChannelStdDevs;
+void SignalProcessor::applyHammingWindow(std::deque<double>& signal) {
+    int N = signal.size();
+    for (int n = 0; n < N; ++n) {
+        double w = 0.54 - 0.46 * cos(2 * M_PI * n / (N - 1));
+        signal[n] *= w;
+    }
 }
 
-const std::deque<double>& SignalProcessor::getBlueChannelStdDevs() const {
-    return blueChannelStdDevs;
+void SignalProcessor::normalizeSignal(std::deque<double>& signal) {
+    double norm = 0.0;
+    for (double val : signal) {
+        norm += val * val;
+    }
+    norm = sqrt(norm);
+
+    if (norm > 0.0) {
+        for (double& val : signal) {
+            val /= norm;
+        }
+    }
 }
 
-double SignalProcessor::computeDominantFrequency(const std::deque<double>& signal, double fps) {
-    if (signal.size() < 2) {
+double SignalProcessor::computeDominantFrequency(const std::deque<double>& inputSignal, double fps) {
+    if (inputSignal.size() < 2) {
         return -1.0; // Not enough data
     }
 
+    // Copy the input signal to modify it
+    std::deque<double> signal = inputSignal;
+
+    // Step 1: Detrend the signal
+    detrend(signal);
+
+    // Step 2: Interpolate the signal (if necessary)
+    // Since the video frames are captured at regular intervals, interpolation might not be needed.
+
+    // Step 3: Apply Hamming window
+    applyHammingWindow(signal);
+
+    // Step 4: Normalize the signal
+    normalizeSignal(signal);
+
+    // Prepare the input data for FFT
     int N = signal.size();
     double* in = (double*) fftw_malloc(sizeof(double) * N);
     fftw_complex* out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * (N/2 + 1));
-
-    // Prepare the input data
     std::copy(signal.begin(), signal.end(), in);
 
     // Perform FFT
