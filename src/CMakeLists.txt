@@ -20,12 +20,14 @@ set(SOURCES
     ModelLoader.cpp
     DetectionPostProcess.cpp
     FaceDetection.cpp
+    SignalProcessor.cpp
     evm.cpp
 )
 set(HEADERS
     ModelLoader.hpp
     DetectionPostProcess.hpp
     FaceDetection.hpp
+    SignalProcessor.hpp
     evm.hpp
 )
 

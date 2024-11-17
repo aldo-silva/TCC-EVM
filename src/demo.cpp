@@ -3,6 +3,8 @@
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+#include "SignalProcessor.hpp"
+
 
 #define SHOW_FPS (1)
 
@@ -15,6 +17,7 @@ const std::string GSTREAMER_PIPELINE = "nvarguscamerasrc ! video/x-raw(memory:NV
 int main(int argc, char* argv[]) {
     my::FaceDetection faceDetector("/home/aldo/Documentos/media_pipe-main/models");
     my::evm evm_processor;
+    my::SignalProcessor signalProcessor;
     cv::VideoCapture cap(GSTREAMER_PIPELINE, cv::CAP_GSTREAMER);
     bool success = cap.isOpened();
     if (!success) {
@@ -108,18 +111,30 @@ int main(int argc, char* argv[]) {
             std::vector<cv::Mat> rgb_channels;
             cv::split(processed_bgr, rgb_channels);
 
-            cv::imshow("Red Channel", rgb_channels[2]);
-            cv::imshow("Green Channel", rgb_channels[1]);
-            cv::imshow("Blue Channel", rgb_channels[0]);
+            // cv::imshow("Red Channel", rgb_channels[2]);
+            // cv::imshow("Green Channel", rgb_channels[1]);
+            // cv::imshow("Blue Channel", rgb_channels[0]);
 
             // croppedFace.copyTo(frame(roi));
 
             // Exibir a imagem processada
-            cv::imshow("Enhanced Face", processed_bgr);
+            // cv::imshow("Enhanced Face", processed_bgr);
 
             // Opcional: desenhar o ROI na imagem original
-            cv::rectangle(frame, roi, cv::Scalar(0, 255, 0), 2);
-            cv::imshow("Face Detector", frame);
+            // cv::rectangle(frame, roi, cv::Scalar(0, 255, 0), 2);
+            // cv::imshow("Face Detector", frame);
+
+            // Compute heart rate and SpO₂ every time buffer is full
+            if (signalProcessor.getGreenChannelMeans().size() == 300) { 
+                double heartRate = signalProcessor.computeHeartRate(fps);
+                std::cout << "Estimated Heart Rate: " << heartRate << " bpm" << std::endl;
+
+                double spo2 = signalProcessor.computeSpO2();
+                std::cout << "Estimated SpO₂: " << spo2 << "%" << std::endl;
+
+                // Reset data after computation
+                signalProcessor.reset();
+            }
         } else {
             cv::imshow("Face Detector", frame);
         }
