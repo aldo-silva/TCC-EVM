@@ -1,62 +1,44 @@
-#ifndef SIGNAL_PROCESSOR_HPP
-#define SIGNAL_PROCESSOR_HPP
+// SignalProcessor.hpp
+#ifndef SIGNALPROCESSOR_HPP
+#define SIGNALPROCESSOR_HPP
 
-#include <vector>
 #include <deque>
+#include <vector>
 #include <opencv2/opencv.hpp>
 
 namespace my {
 
 class SignalProcessor {
 public:
-    SignalProcessor(size_t bufferSize = 300); // Default buffer size to store 10 seconds at 30 fps
+    SignalProcessor(size_t bufferSize);
     ~SignalProcessor();
 
-    // Add a new frame's RGB channels
     void addFrameData(const std::vector<cv::Mat>& rgb_channels);
 
-    // Get the mean values over time for each channel
     const std::deque<double>& getRedChannelMeans() const;
     const std::deque<double>& getGreenChannelMeans() const;
     const std::deque<double>& getBlueChannelMeans() const;
 
-    // Get the standard deviation values over time for each channel
-    const std::deque<double>& getRedChannelStdDevs() const;
-    const std::deque<double>& getGreenChannelStdDevs() const;
-    const std::deque<double>& getBlueChannelStdDevs() const;
-
-    // Compute heart rate using the green channel
     double computeHeartRate(double fps);
-
-    // Compute SpO₂ using red and blue channels
     double computeSpO2();
 
-    // Reset the stored data
     void reset();
 
 private:
-    // Circular buffers to store mean and std dev over time
+    size_t maxBufferSize;
     std::deque<double> redChannelMeans;
     std::deque<double> greenChannelMeans;
     std::deque<double> blueChannelMeans;
 
-    std::deque<double> redChannelStdDevs;
-    std::deque<double> greenChannelStdDevs;
-    std::deque<double> blueChannelStdDevs;
-
-    // Maximum buffer size
-    size_t maxBufferSize;
-
-    // Helper function to compute frequency
-    double computeDominantFrequency(const std::deque<double>& signal, double fps);
-
-    // Helper functions for signal preprocessing
     void detrend(std::deque<double>& signal);
     void applyHammingWindow(std::deque<double>& signal);
     void normalizeSignal(std::deque<double>& signal);
+    double computeDominantFrequency(const std::deque<double>& inputSignal, double fps);
 
+    // Function to save signals to files
+    void saveSignal(const std::deque<double>& signal, const std::string& filename);
 };
 
 } // namespace my
 
-#endif // SIGNAL_PROCESSOR_HPP
+#endif // SIGNALPROCESSOR_HPP

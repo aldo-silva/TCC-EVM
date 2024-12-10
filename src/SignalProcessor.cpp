@@ -1,8 +1,11 @@
+// SignalProcessor.cpp
 #include "SignalProcessor.hpp"
 #include <numeric>
 #include <algorithm>
 #include <fftw3.h>
-#include <cmath> // For M_PI
+#include <cmath>    // For M_PI
+#include <fstream>  // For file operations
+#include <iostream> // For std::cerr
 
 namespace my {
 
@@ -16,7 +19,7 @@ SignalProcessor::~SignalProcessor() {
 }
 
 void SignalProcessor::addFrameData(const std::vector<cv::Mat>& rgb_channels) {
-    // Compute mean for each channel
+    // Compute the mean for each channel
     for (int i = 0; i < 3; ++i) {
         cv::Scalar mean;
         mean = cv::mean(rgb_channels[i]);
@@ -42,6 +45,11 @@ void SignalProcessor::addFrameData(const std::vector<cv::Mat>& rgb_channels) {
                 break;
         }
     }
+
+    // Save the channel means after updating
+    saveSignal(redChannelMeans, "data/redChannelMeans.csv");
+    saveSignal(greenChannelMeans, "data/greenChannelMeans.csv");
+    saveSignal(blueChannelMeans, "data/blueChannelMeans.csv");
 }
 
 const std::deque<double>& SignalProcessor::getRedChannelMeans() const {
@@ -106,44 +114,71 @@ void SignalProcessor::normalizeSignal(std::deque<double>& signal) {
     }
 }
 
+void SignalProcessor::saveSignal(const std::deque<double>& signal, const std::string& filename) {
+    std::ofstream file(filename);
+    if (file.is_open()) {
+        for (size_t i = 0; i < signal.size(); ++i) {
+            file << i << "," << signal[i] << std::endl;
+        }
+        file.close();
+    } else {
+        std::cerr << "Unable to open file " << filename << " for writing." << std::endl;
+    }
+}
+
 double SignalProcessor::computeDominantFrequency(const std::deque<double>& inputSignal, double fps) {
     if (inputSignal.size() < 2) {
-        return -1.0; // Not enough data
+        return -1.0; // Insufficient data
     }
 
-    // Copy the input signal to modify it
+    // Copy the input signal
     std::deque<double> signal = inputSignal;
+
+    // Save the raw signal
+    saveSignal(signal, "data/raw_signal.csv");
 
     // Step 1: Detrend the signal
     detrend(signal);
+    saveSignal(signal, "data/detrended_signal.csv");
 
-    // Step 2: Interpolate the signal (if necessary)
-    // Since the video frames are captured at regular intervals, interpolation might not be needed.
-
-    // Step 3: Apply Hamming window
+    // Step 2: Apply Hamming window
     applyHammingWindow(signal);
+    saveSignal(signal, "data/windowed_signal.csv");
 
-    // Step 4: Normalize the signal
+    // Step 3: Normalize the signal
     normalizeSignal(signal);
+    saveSignal(signal, "data/normalized_signal.csv");
 
-    // Prepare the input data for FFT
+    // Prepare data for FFT
     int N = signal.size();
     double* in = (double*) fftw_malloc(sizeof(double) * N);
-    fftw_complex* out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * (N/2 + 1));
+    fftw_complex* out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * (N / 2 + 1));
     std::copy(signal.begin(), signal.end(), in);
 
-    // Perform FFT
+    // Execute FFT
     fftw_plan p = fftw_plan_dft_r2c_1d(N, in, out, FFTW_ESTIMATE);
     fftw_execute(p);
 
     // Compute magnitude spectrum
-    std::vector<double> magnitudes(N/2 + 1);
-    for (int i = 0; i < N/2 + 1; ++i) {
-        magnitudes[i] = sqrt(out[i][0]*out[i][0] + out[i][1]*out[i][1]);
+    std::vector<double> magnitudes(N / 2 + 1);
+    for (int i = 0; i < N / 2 + 1; ++i) {
+        magnitudes[i] = sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]);
     }
 
-    // Find the peak frequency within expected heart rate range (e.g., 0.8 - 3.0 Hz)
+    // Save the magnitude spectrum
     double freqResolution = fps / N;
+    std::ofstream magFile("data/magnitude_spectrum.csv");
+    if (magFile.is_open()) {
+        for (size_t i = 0; i < magnitudes.size(); ++i) {
+            double freq = i * freqResolution;
+            magFile << freq << "," << magnitudes[i] << std::endl;
+        }
+        magFile.close();
+    } else {
+        std::cerr << "Unable to open file magnitude_spectrum.csv for writing." << std::endl;
+    }
+
+    // Find the dominant frequency within the expected heart rate range (e.g., 0.8 - 3.0 Hz)
     int minIndex = static_cast<int>(0.8 / freqResolution);
     int maxIndex = static_cast<int>(3.0 / freqResolution);
 
@@ -160,7 +195,7 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     // Convert index to frequency
     double frequency = max_index * freqResolution; // in Hz
 
-    // Cleanup
+    // Clean up
     fftw_destroy_plan(p);
     fftw_free(in);
     fftw_free(out);
@@ -186,14 +221,22 @@ double SignalProcessor::computeSpO2() {
     double redMean = std::accumulate(redChannelMeans.begin(), redChannelMeans.end(), 0.0) / redChannelMeans.size();
     double blueMean = std::accumulate(blueChannelMeans.begin(), blueChannelMeans.end(), 0.0) / blueChannelMeans.size();
 
-    double redAC = std::sqrt(std::accumulate(redChannelStdDevs.begin(), redChannelStdDevs.end(), 0.0,
-        [](double sum, double val){ return sum + val * val; }) / redChannelStdDevs.size());
-    double blueAC = std::sqrt(std::accumulate(blueChannelStdDevs.begin(), blueChannelStdDevs.end(), 0.0,
-        [](double sum, double val){ return sum + val * val; }) / blueChannelStdDevs.size());
+    // Calculate AC components (standard deviation)
+    double redSumSq = 0.0;
+    for (double val : redChannelMeans) {
+        redSumSq += (val - redMean) * (val - redMean);
+    }
+    double redAC = sqrt(redSumSq / redChannelMeans.size());
+
+    double blueSumSq = 0.0;
+    for (double val : blueChannelMeans) {
+        blueSumSq += (val - blueMean) * (val - blueMean);
+    }
+    double blueAC = sqrt(blueSumSq / blueChannelMeans.size());
 
     double R = (redAC / redMean) / (blueAC / blueMean);
 
-    // Use empirical formula (placeholder)
+    // Use empirical formula (simplified example)
     double spo2 = 110 - 25 * R; // This formula is a simplification and may not be accurate
 
     // Clamp the value between 0 and 100
@@ -206,10 +249,6 @@ void SignalProcessor::reset() {
     redChannelMeans.clear();
     greenChannelMeans.clear();
     blueChannelMeans.clear();
-
-    redChannelStdDevs.clear();
-    greenChannelStdDevs.clear();
-    blueChannelStdDevs.clear();
 }
 
 } // namespace my
