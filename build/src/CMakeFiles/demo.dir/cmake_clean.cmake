@@ -2,6 +2,7 @@ file(REMOVE_RECURSE
   "CMakeFiles/demo.dir/DetectionPostProcess.cpp.o"
   "CMakeFiles/demo.dir/FaceDetection.cpp.o"
   "CMakeFiles/demo.dir/ModelLoader.cpp.o"
+  "CMakeFiles/demo.dir/SignalProcessor.cpp.o"
   "CMakeFiles/demo.dir/demo.cpp.o"
   "CMakeFiles/demo.dir/evm.cpp.o"
   "demo"

@@ -225,6 +225,33 @@ ModelLoader.cpp.s:
 	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/ModelLoader.cpp.s
 .PHONY : ModelLoader.cpp.s
 
+SignalProcessor.o: SignalProcessor.cpp.o
+
+.PHONY : SignalProcessor.o
+
+# target to build an object file
+SignalProcessor.cpp.o:
+	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/SignalProcessor.cpp.o
+.PHONY : SignalProcessor.cpp.o
+
+SignalProcessor.i: SignalProcessor.cpp.i
+
+.PHONY : SignalProcessor.i
+
+# target to preprocess a source file
+SignalProcessor.cpp.i:
+	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/SignalProcessor.cpp.i
+.PHONY : SignalProcessor.cpp.i
+
+SignalProcessor.s: SignalProcessor.cpp.s
+
+.PHONY : SignalProcessor.s
+
+# target to generate assembly for a file
+SignalProcessor.cpp.s:
+	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/SignalProcessor.cpp.s
+.PHONY : SignalProcessor.cpp.s
+
 demo.o: demo.cpp.o
 
 .PHONY : demo.o
@@ -297,6 +324,9 @@ help:
 	@echo "... ModelLoader.o"
 	@echo "... ModelLoader.i"
 	@echo "... ModelLoader.s"
+	@echo "... SignalProcessor.o"
+	@echo "... SignalProcessor.i"
+	@echo "... SignalProcessor.s"
 	@echo "... demo.o"
 	@echo "... demo.i"
 	@echo "... demo.s"

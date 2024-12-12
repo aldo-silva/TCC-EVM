@@ -17,10 +17,10 @@ def plot_signal(filename, title):
     plt.show()
 
 # Plot signals at different stages
-plot_signal('data/raw_signal.csv', 'Raw Signal')
-plot_signal('data/detrended_signal.csv', 'Signal after Detrending')
-plot_signal('data/windowed_signal.csv', 'Signal after Hamming Window')
-plot_signal('data/normalized_signal.csv', 'Normalized Signal')
+plot_signal('/home/aldo/data/raw_signal.csv', 'Raw Signal')
+plot_signal('/home/aldo/data/detrended_signal.csv', 'Signal after Detrending')
+plot_signal('/home/aldo/data/windowed_signal.csv', 'Signal after Hamming Window')
+plot_signal('/home/aldo/data/normalized_signal.csv', 'Normalized Signal')
 
 # Plot magnitude spectrum
 def plot_spectrum(filename, title):

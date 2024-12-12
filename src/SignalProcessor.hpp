@@ -10,7 +10,7 @@ namespace my {
 
 class SignalProcessor {
 public:
-    SignalProcessor(size_t bufferSize);
+    SignalProcessor(size_t bufferSize = 300);
     ~SignalProcessor();
 
     void addFrameData(const std::vector<cv::Mat>& rgb_channels);

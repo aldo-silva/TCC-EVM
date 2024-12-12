@@ -47,9 +47,9 @@ void SignalProcessor::addFrameData(const std::vector<cv::Mat>& rgb_channels) {
     }
 
     // Save the channel means after updating
-    saveSignal(redChannelMeans, "data/redChannelMeans.csv");
-    saveSignal(greenChannelMeans, "data/greenChannelMeans.csv");
-    saveSignal(blueChannelMeans, "data/blueChannelMeans.csv");
+    saveSignal(redChannelMeans, "/home/aldo/data/redChannelMeans.csv");
+    saveSignal(greenChannelMeans, "/home/aldo/datagreenChannelMeans.csv");
+    saveSignal(blueChannelMeans, "/home/aldo/data/blueChannelMeans.csv");
 }
 
 const std::deque<double>& SignalProcessor::getRedChannelMeans() const {
@@ -135,19 +135,19 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     std::deque<double> signal = inputSignal;
 
     // Save the raw signal
-    saveSignal(signal, "data/raw_signal.csv");
+    saveSignal(signal, "/home/aldo/data/raw_signal.csv");
 
     // Step 1: Detrend the signal
     detrend(signal);
-    saveSignal(signal, "data/detrended_signal.csv");
+    saveSignal(signal, "/home/aldo/data/detrended_signal.csv");
 
     // Step 2: Apply Hamming window
     applyHammingWindow(signal);
-    saveSignal(signal, "data/windowed_signal.csv");
+    saveSignal(signal, "/home/aldo/data/windowed_signal.csv");
 
     // Step 3: Normalize the signal
     normalizeSignal(signal);
-    saveSignal(signal, "data/normalized_signal.csv");
+    saveSignal(signal, "/home/aldo/data/normalized_signal.csv");
 
     // Prepare data for FFT
     int N = signal.size();
@@ -167,7 +167,7 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
 
     // Save the magnitude spectrum
     double freqResolution = fps / N;
-    std::ofstream magFile("data/magnitude_spectrum.csv");
+    std::ofstream magFile("/home/aldo/data/magnitude_spectrum.csv");
     if (magFile.is_open()) {
         for (size_t i = 0; i < magnitudes.size(); ++i) {
             double freq = i * freqResolution;
