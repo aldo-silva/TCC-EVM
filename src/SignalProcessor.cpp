@@ -192,8 +192,27 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
         }
     }
 
+    double minFrequency = 0.8;
+    double maxFrequency = 3.0;
+
+    std::ofstream cutoffFile("/home/aldo/data/cutoff_frequencies.txt");
+    if (cutoffFile.is_open()) {
+        cutoffFile << minFrequency << "," << maxFrequency;
+        cutoffFile.close();
+    } else {
+        std::cerr << "Unable to open file cutoff_frequencies.txt for writing." << std::endl;
+    }
+
     // Convert index to frequency
     double frequency = max_index * freqResolution; // in Hz
+
+    std::ofstream freqFile("/home/aldo/data/dominant_frequency.txt");
+    if (freqFile.is_open()) {
+        freqFile << frequency;
+        freqFile.close();
+    } else {
+        std::cerr << "Unable to open file dominant_frequency.txt for writing." << std::endl;
+    }
 
     // Clean up
     fftw_destroy_plan(p);
