@@ -178,9 +178,20 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
         std::cerr << "Unable to open file magnitude_spectrum.csv for writing." << std::endl;
     }
 
+    double minFrequency = 0.8;
+    double maxFrequency = 3.0;
+
     // Find the dominant frequency within the expected heart rate range (e.g., 0.8 - 3.0 Hz)
-    int minIndex = static_cast<int>(0.8 / freqResolution);
-    int maxIndex = static_cast<int>(3.0 / freqResolution);
+    int minIndex = static_cast<int>(std::ceil(0.8 / freqResolution));
+    int maxIndex = static_cast<int>(std::floor(3.0 / freqResolution));
+
+    std::ofstream cutoffFile("/home/aldo/data/cutoff_frequencies.txt");
+    if (cutoffFile.is_open()) {
+        cutoffFile << minFrequency << "," << maxFrequency;
+        cutoffFile.close();
+    } else {
+        std::cerr << "Unable to open file cutoff_frequencies.txt for writing." << std::endl;
+    }
 
     double max_magnitude = 0.0;
     int max_index = minIndex;
@@ -190,17 +201,6 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
             max_magnitude = magnitudes[i];
             max_index = i;
         }
-    }
-
-    double minFrequency = 0.8;
-    double maxFrequency = 3.0;
-
-    std::ofstream cutoffFile("/home/aldo/data/cutoff_frequencies.txt");
-    if (cutoffFile.is_open()) {
-        cutoffFile << minFrequency << "," << maxFrequency;
-        cutoffFile.close();
-    } else {
-        std::cerr << "Unable to open file cutoff_frequencies.txt for writing." << std::endl;
     }
 
     // Convert index to frequency
