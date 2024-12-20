@@ -36,6 +36,10 @@ int main(int argc, char* argv[]) {
     float highFreq = 3.0f; // Frequência cardíaca máxima (~180 bpm)
     float alpha = 50.0f;   // Fator de amplificação
 
+    // Variáveis para armazenar os valores de Heart Rate e SpO₂
+    double heartRate = 0.0;
+    double spo2 = 0.0;
+
     while (true) {
         cv::Mat frame;
         success = cap.read(frame);
@@ -127,6 +131,8 @@ int main(int argc, char* argv[]) {
             // cv::rectangle(frame, roi, cv::Scalar(0, 255, 0), 2);
             // cv::imshow("Face Detector", frame);
 
+            cv::rectangle(frame, roi, cv::Scalar(0, 255, 0), 2);
+
             // Compute heart rate and SpO₂ every time buffer is full
             if (signalProcessor.getGreenChannelMeans().size() == 300) { 
                 double heartRate = signalProcessor.computeHeartRate(fps);
@@ -138,10 +144,35 @@ int main(int argc, char* argv[]) {
                 // Reset data after computation
                 signalProcessor.reset();
             }
+
+
+            // **Adicionar os valores de Heart Rate e SpO₂ na imagem**
+            // Definir posição para os textos
+            int baseLine = 0;
+            cv::Size textSizeHR = cv::getTextSize("HR: ", cv::FONT_HERSHEY_SIMPLEX, 0.7, 2, &baseLine);
+            cv::Size textSizeSpO2 = cv::getTextSize("SpO2: ", cv::FONT_HERSHEY_SIMPLEX, 0.7, 2, &baseLine);
+
+            // Posições (ajuste conforme necessário)
+            cv::Point textOrgHR(roi.x, roi.y - 10); // Acima do ROI
+            cv::Point textOrgSpO2(roi.x, roi.y - 30); // Acima do HR
+
+            // Verificar se os valores foram calculados
+            if (heartRate > 0.0) {
+                std::string hrText = "HR: " + std::to_string(static_cast<int>(heartRate)) + " bpm";
+                cv::putText(frame, hrText, textOrgHR, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(255, 0, 0), 2);
+            }
+
+            if (spo2 > 0.0) {
+                std::string spo2Text = "SpO2: " + std::to_string(static_cast<int>(spo2)) + " %";
+                cv::putText(frame, spo2Text, textOrgSpO2, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 0, 255), 2);
+            }
+
         } else {
             cv::imshow("Face Detector", frame);
         }
-
+        
+        cv::imshow("Face Detector", frame);
+        
         if (cv::waitKey(10) == 27) break;  // Sair se 'ESC' for pressionado
     }
 
