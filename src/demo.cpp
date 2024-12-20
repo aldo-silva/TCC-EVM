@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
             // Definir proporções da testa em relação à face
             float widthFraction = 0.7f;
             float heightFraction = 0.25f;
-            float verticalOffsetFraction = 0.2f
+            float verticalOffsetFraction = 0.2f;
 
             int foreheadWidth = static_cast<int>(roi.width * widthFraction);
             int foreheadHeight = static_cast<int>(roi.height * heightFraction);
