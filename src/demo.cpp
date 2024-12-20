@@ -67,8 +67,8 @@ int main(int argc, char* argv[]) {
         if (roi.width > 0 && roi.height > 0) {
             cv::Mat croppedFace = faceDetector.cropFrame(roi);
 
-            float widthFraction = 0.5f;
-            float heightFraction = 0.25f;
+            float widthFraction = 0.8f;
+            float heightFraction = 0.8f;
 
             // Define the forehead region within the face ROI
             int foreheadWidth = static_cast<int>(roi.width * widthFraction);
@@ -152,7 +152,6 @@ int main(int argc, char* argv[]) {
             cv::Size textSizeHR = cv::getTextSize("HR: ", cv::FONT_HERSHEY_SIMPLEX, 0.7, 2, &baseLine);
             cv::Size textSizeSpO2 = cv::getTextSize("SpO2: ", cv::FONT_HERSHEY_SIMPLEX, 0.7, 2, &baseLine);
 
-            // Posições (ajuste conforme necessário)
             cv::Point textOrgHR(roi.x, roi.y - 10); // Acima do ROI
             cv::Point textOrgSpO2(roi.x, roi.y - 30); // Acima do HR
 
