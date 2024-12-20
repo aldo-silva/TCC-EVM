@@ -67,15 +67,16 @@ int main(int argc, char* argv[]) {
             cv::Mat croppedFace = faceDetector.cropFrame(roi);
 
             // Definir proporções da testa em relação à face
-            float widthFraction = 0.5f;
+            float widthFraction = 0.7f;
             float heightFraction = 0.25f;
+            float verticalOffsetFraction = 0.2f
 
             int foreheadWidth = static_cast<int>(roi.width * widthFraction);
             int foreheadHeight = static_cast<int>(roi.height * heightFraction);
 
             // Coordenadas do ROI da testa
             int foreheadX = roi.x + (roi.width - foreheadWidth) / 2; // Centralizado horizontalmente
-            int foreheadY = roi.y; // No topo do ROI do rosto
+            int foreheadY = roi.y + static_cast<int>(roi.height * verticalOffsetFraction); // Início mais abaixo
 
             cv::Rect foreheadRoi(foreheadX, foreheadY, foreheadWidth, foreheadHeight);
 
