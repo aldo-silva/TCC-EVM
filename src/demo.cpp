@@ -67,8 +67,8 @@ int main(int argc, char* argv[]) {
         if (roi.width > 0 && roi.height > 0) {
             cv::Mat croppedFace = faceDetector.cropFrame(roi);
 
-            float widthFraction = 0.8f;
-            float heightFraction = 0.8f;
+            float widthFraction = 0.5f;
+            float heightFraction = 0.25f;
 
             // Define the forehead region within the face ROI
             int foreheadWidth = static_cast<int>(roi.width * widthFraction);
@@ -77,20 +77,25 @@ int main(int argc, char* argv[]) {
             foreheadWidth -= foreheadWidth % 2;
             foreheadHeight -= foreheadHeight % 2;
 
-            if (foreheadWidth < 2) foreheadWidth = 2;
-            if (foreheadHeight < 2) foreheadHeight = 2;
+            // if (foreheadWidth < 2) foreheadWidth = 2;
+            // if (foreheadHeight < 2) foreheadHeight = 2;
+
+            // Coordenadas iniciais para o ROI da testa
+            int foreheadX = roi.x + (roi.width - foreheadWidth) / 2; // Centralizado horizontalmente no ROI do rosto
+            int foreheadY = roi.y; // Início no topo do ROI do rosto
 
             int x = (roi.width - foreheadWidth) / 2; // Centered horizontally
             int y = 0; // Start at the top of the face ROI
 
-            cv::Rect foreheadRoi(x, y, foreheadWidth, foreheadHeight); // x=0, y=0 since it's relative to croppedFace
+            // cv::Rect foreheadRoi(x, y, foreheadWidth, foreheadHeight); // x=0, y=0 since it's relative to croppedFace
+
+            cv::Rect foreheadRoi(foreheadX, foreheadY, foreheadWidth, foreheadHeight);
 
             foreheadRoi &= cv::Rect(0, 0, croppedFace.cols, croppedFace.rows);
 
             cv::rectangle(frame, foreheadRoi, cv::Scalar(255, 0, 0), 2);
 
             cv::Mat croppedForehead = croppedFace(foreheadRoi);
-
 
             cv::Mat ycrcb_forehead;
             cv::cvtColor(croppedForehead, ycrcb_forehead, cv::COLOR_BGR2YCrCb);
