@@ -87,6 +87,8 @@ int main(int argc, char* argv[]) {
 
             foreheadRoi &= cv::Rect(0, 0, croppedFace.cols, croppedFace.rows);
 
+            cv::rectangle(frame, foreheadRoi, cv::Scalar(255, 0, 0), 2);
+
             cv::Mat croppedForehead = croppedFace(foreheadRoi);
 
 
