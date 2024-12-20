@@ -95,10 +95,51 @@ int main(int argc, char* argv[]) {
 
             cv::rectangle(frame, foreheadRoi, cv::Scalar(255, 0, 0), 2);
 
-            cv::Mat croppedForehead = croppedFace(foreheadRoi);
+            // cv::Mat croppedForehead = croppedFace(foreheadRoi);
+            // cv::Mat ycrcb_forehead;
+            // cv::cvtColor(croppedForehead, ycrcb_forehead, cv::COLOR_BGR2YCrCb);
 
-            cv::Mat ycrcb_forehead;
-            cv::cvtColor(croppedForehead, ycrcb_forehead, cv::COLOR_BGR2YCrCb);
+            // Verificar se o croppedFace é válido
+            if (!croppedFace.empty() && foreheadRoi.width > 0 && foreheadRoi.height > 0) {
+                // Garantir que o ROI esteja dentro dos limites
+                foreheadRoi &= cv::Rect(0, 0, croppedFace.cols, croppedFace.rows);
+
+                if (foreheadRoi.width > 0 && foreheadRoi.height > 0) {
+                    // Recortar a região da testa
+                    cv::Mat croppedForehead = croppedFace(foreheadRoi);
+
+                    // Verificar se a região recortada é válida antes de processar
+                    if (!croppedForehead.empty()) {
+                        cv::Mat ycrcb_forehead;
+                        cv::cvtColor(croppedForehead, ycrcb_forehead, cv::COLOR_BGR2YCrCb);
+
+                        std::vector<cv::Mat> ycrcb_channels;
+                        cv::split(ycrcb_forehead, ycrcb_channels);
+
+                        // Processar apenas o canal de crominância (Cr ou Cb)
+                        cv::Mat processed_channel = evm_processor.processChannel(
+                            ycrcb_channels[2], lowFreq, highFreq, fps, alpha); // Usando o canal Cb
+
+                        // Substituir o canal processado na imagem
+                        ycrcb_channels[2] = processed_channel;
+                        cv::Mat processed_ycrcb;
+                        cv::merge(ycrcb_channels, processed_ycrcb);
+
+                        // Converter de volta para BGR para visualização
+                        cv::Mat processed_bgr;
+                        cv::cvtColor(processed_ycrcb, processed_bgr, cv::COLOR_YCrCb2BGR);
+
+                        processed_bgr.copyTo(croppedFace(foreheadRoi));
+                    } else {
+                        std::cerr << "Erro: croppedForehead está vazio após recortar a testa." << std::endl;
+                    }
+                } else {
+                    std::cerr << "Erro: foreheadRoi inválido após ajuste aos limites do croppedFace." << std::endl;
+                }
+            } else {
+                std::cerr << "Erro: croppedFace vazio ou foreheadRoi inválido." << std::endl;
+            }
+
 
             std::vector<cv::Mat> ycrcb_channels;
             cv::split(ycrcb_forehead, ycrcb_channels);
