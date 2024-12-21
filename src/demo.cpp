@@ -157,7 +157,7 @@ int main(int argc, char* argv[]) {
 
                     std::cout << "Estimated Heart Rate: " << heartRate << " bpm" << std::endl;
                     std::cout << "Estimated SpO₂: " << spo2 << "%" << std::endl;
-
+                    signalProcessor.saveIntermediateParameters("/home/aldo/data/spo2_intermediate_params.csv");
                     signalProcessor.reset(); // limpa o buffer
                 }
 

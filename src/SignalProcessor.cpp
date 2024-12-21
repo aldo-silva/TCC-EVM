@@ -1,10 +1,11 @@
+// SignalProcessor.cpp
 #include "SignalProcessor.hpp"
 #include <numeric>
 #include <algorithm>
 #include <fftw3.h>
-#include <cmath>    // For M_PI
-#include <fstream>  // For file operations
-#include <iostream> // For std::cerr
+#include <cmath>    
+#include <fstream>  
+#include <iostream> 
 
 namespace my {
 
@@ -45,10 +46,10 @@ void SignalProcessor::addFrameData(const std::vector<cv::Mat>& rgb_channels) {
         }
     }
 
-    // Save the channel means after updating
-    saveSignal(redChannelMeans, "/home/aldo/data/redChannelMeans.csv");
-    saveSignal(greenChannelMeans, "/home/aldo/datagreenChannelMeans.csv");
-    saveSignal(blueChannelMeans, "/home/aldo/data/blueChannelMeans.csv");
+    // Salva os meios de cada canal para debug
+    saveSignal(redChannelMeans,   "/home/aldo/data/redChannelMeans.csv");
+    saveSignal(greenChannelMeans, "/home/aldo/data/greenChannelMeans.csv");
+    saveSignal(blueChannelMeans,  "/home/aldo/data/blueChannelMeans.csv");
 }
 
 const std::deque<double>& SignalProcessor::getRedChannelMeans() const {
@@ -67,19 +68,18 @@ void SignalProcessor::detrend(std::deque<double>& signal) {
     int N = (int)signal.size();
     if (N < 2) return;
 
-    // Compute linear fit (least squares)
     double sumX = 0.0;
     double sumY = 0.0;
     double sumX2 = 0.0;
     double sumXY = 0.0;
     for (int i = 0; i < N; ++i) {
-        sumX += i;
-        sumY += signal[i];
+        sumX  += i;
+        sumY  += signal[i];
         sumX2 += (double)i * i;
         sumXY += i * signal[i];
     }
     double denom = N * sumX2 - sumX * sumX;
-    if (denom == 0) return; // Prevent division by zero
+    if (denom == 0) return; 
 
     double a = (N * sumXY - sumX * sumY) / denom;
     double b = (sumY * sumX2 - sumX * sumXY) / denom;
@@ -125,25 +125,49 @@ void SignalProcessor::saveSignal(const std::deque<double>& signal, const std::st
     }
 }
 
-// Função de interpolação linear
+// NOVO: Salva parâmetros intermediários
+void SignalProcessor::saveIntermediateParameters(const std::string& filename) {
+    std::ofstream file(filename);
+    if (file.is_open()) {
+        file << "Index,RedAC,RedDC,BlueAC,BlueDC,R,SpO2\n";
+        size_t n = std::min({ redACHistory.size(), 
+                              redDCHistory.size(), 
+                              blueACHistory.size(),
+                              blueDCHistory.size(),
+                              RHistory.size(),
+                              spo2History.size() });
+        for (size_t i = 0; i < n; ++i) {
+            file << i << ","
+                 << redACHistory[i] << ","
+                 << redDCHistory[i] << ","
+                 << blueACHistory[i] << ","
+                 << blueDCHistory[i] << ","
+                 << RHistory[i] << ","
+                 << spo2History[i] << "\n";
+        }
+        file.close();
+    } else {
+        std::cerr << "Unable to open file " << filename << " for writing intermediate params." << std::endl;
+    }
+}
+
+// Interpolação linear
 std::deque<double> SignalProcessor::linearInterpolation(const std::deque<double>& signal,
                                                         double originalFps, double targetFps) {
     if (signal.size() < 2) {
-        return signal; // Nada a fazer
+        return signal; 
     }
 
     double ratio = targetFps / originalFps;
     size_t newSize = static_cast<size_t>(signal.size() * ratio);
-
     if (newSize == 0) newSize = signal.size();
 
     std::deque<double> interpolatedSignal(newSize);
 
-    // Para este exemplo, assumimos que o tempo total é (size-1)/originalFps
     for (size_t i = 0; i < newSize; ++i) {
-        double t = i / targetFps;         // tempo da nova amostra
+        double t = i / targetFps;         
         double origIndex = t * originalFps;
-        int index = static_cast<int>(floor(origIndex));
+        int index = static_cast<int>(std::floor(origIndex));
         double frac = origIndex - index;
 
         if (index < 0) {
@@ -151,88 +175,75 @@ std::deque<double> SignalProcessor::linearInterpolation(const std::deque<double>
         } else if (index >= (int)signal.size() - 1) {
             interpolatedSignal[i] = signal.back();
         } else {
-            interpolatedSignal[i] = signal[index] + frac * (signal[index + 1] - signal[index]);
+            interpolatedSignal[i] = signal[index] 
+                + frac * (signal[index + 1] - signal[index]);
         }
     }
-
     return interpolatedSignal;
 }
 
+// FFT e frequência dominante
 double SignalProcessor::computeDominantFrequency(const std::deque<double>& inputSignal, double fps) {
     if (inputSignal.size() < 2) {
         return -1.0; // Insufficient data
     }
 
-    // Copy the input signal
     std::deque<double> signal = inputSignal;
-
-    // Save the raw signal
     saveSignal(signal, "/home/aldo/data/raw_signal.csv");
 
-    // Step 1: Detrend the signal
     detrend(signal);
     saveSignal(signal, "/home/aldo/data/detrended_signal.csv");
 
-    // Step 2: Interpolation para garantir amostragem uniforme
     double targetFps = fps; 
     std::deque<double> interpolatedSignal = linearInterpolation(signal, fps, targetFps);
     saveSignal(interpolatedSignal, "/home/aldo/data/interpolated_signal.csv");
 
-    // Substituir o buffer para as etapas seguintes
     signal = interpolatedSignal;
 
-    // Step 3: Apply Hamming window
     applyHammingWindow(signal);
     saveSignal(signal, "/home/aldo/data/windowed_signal.csv");
 
-    // Step 4: Normalize the signal
     normalizeSignal(signal);
     saveSignal(signal, "/home/aldo/data/normalized_signal.csv");
 
-    // Prepare data for FFT
     int N = (int)signal.size();
     double* in = (double*) fftw_malloc(sizeof(double) * N);
     fftw_complex* out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * (N / 2 + 1));
     std::copy(signal.begin(), signal.end(), in);
 
-    // Execute FFT
     fftw_plan p = fftw_plan_dft_r2c_1d(N, in, out, FFTW_ESTIMATE);
     fftw_execute(p);
 
-    // Compute magnitude spectrum
     std::vector<double> magnitudes(N / 2 + 1);
     for (int i = 0; i < N / 2 + 1; ++i) {
-        magnitudes[i] = sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]);
+        magnitudes[i] = std::sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]);
     }
 
-    // Save the magnitude spectrum
     double freqResolution = targetFps / N;
-    std::ofstream magFile("/home/aldo/data/magnitude_spectrum.csv");
-    if (magFile.is_open()) {
-        for (size_t i = 0; i < magnitudes.size(); ++i) {
-            double freq = i * freqResolution;
-            magFile << freq << "," << magnitudes[i] << std::endl;
+    {
+        std::ofstream magFile("/home/aldo/data/magnitude_spectrum.csv");
+        if (magFile.is_open()) {
+            for (size_t i = 0; i < magnitudes.size(); ++i) {
+                double freq = i * freqResolution;
+                magFile << freq << "," << magnitudes[i] << std::endl;
+            }
+            magFile.close();
         }
-        magFile.close();
-    } else {
-        std::cerr << "Unable to open file magnitude_spectrum.csv for writing." << std::endl;
     }
 
     double minFrequency = 0.8;
     double maxFrequency = 3.0;
 
-    // Find the dominant frequency within the expected heart rate range
-    int minIndex = static_cast<int>(std::ceil(minFrequency / freqResolution));
-    int maxIndex = static_cast<int>(std::floor(maxFrequency / freqResolution));
-
-    // Salvar informação sobre min e max
-    std::ofstream cutoffFile("/home/aldo/data/cutoff_frequencies.txt");
-    if (cutoffFile.is_open()) {
-        cutoffFile << minFrequency << "," << maxFrequency;
-        cutoffFile.close();
-    } else {
-        std::cerr << "Unable to open file cutoff_frequencies.txt for writing." << std::endl;
+    {
+        std::ofstream cutoffFile("/home/aldo/data/cutoff_frequencies.txt");
+        if (cutoffFile.is_open()) {
+            cutoffFile << minFrequency << "," << maxFrequency;
+            cutoffFile.close();
+        }
     }
+
+    int minIndex = (int)std::ceil(minFrequency / freqResolution);
+    int maxIndex = (int)std::floor(maxFrequency / freqResolution);
 
     double max_magnitude = 0.0;
     int max_index = minIndex;
@@ -244,19 +255,16 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
         }
     }
 
-    // Convert index to frequency
     double frequency = max_index * freqResolution; // Hz
 
-    // Save the dominant frequency
-    std::ofstream freqFile("/home/aldo/data/dominant_frequency.txt");
-    if (freqFile.is_open()) {
-        freqFile << frequency;
-        freqFile.close();
-    } else {
-        std::cerr << "Unable to open file dominant_frequency.txt for writing." << std::endl;
+    {
+        std::ofstream freqFile("/home/aldo/data/dominant_frequency.txt");
+        if (freqFile.is_open()) {
+            freqFile << frequency;
+            freqFile.close();
+        }
     }
 
-    // Clean up
     fftw_destroy_plan(p);
     fftw_free(in);
     fftw_free(out);
@@ -264,45 +272,56 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     return frequency;
 }
 
+// HeartRate usa canal verde
 double SignalProcessor::computeHeartRate(double fps) {
     double frequency = computeDominantFrequency(greenChannelMeans, fps);
     if (frequency <= 0.0) {
-        return -1.0; // Invalid frequency
+        return -1.0;
     }
-    double heartRate = frequency * 60.0; // Convert Hz to bpm
+    double heartRate = frequency * 60.0; 
     return heartRate;
 }
 
+// SpO2 + salvar parâmetros intermediários
 double SignalProcessor::computeSpO2() {
     if (redChannelMeans.size() < 2 || blueChannelMeans.size() < 2) {
         return -1.0;
     }
 
-    // Calculate AC and DC components for red and blue channels
-    double redMean = std::accumulate(redChannelMeans.begin(), redChannelMeans.end(), 0.0) / redChannelMeans.size();
-    double blueMean = std::accumulate(blueChannelMeans.begin(), blueChannelMeans.end(), 0.0) / blueChannelMeans.size();
+    double redMean = std::accumulate(redChannelMeans.begin(), redChannelMeans.end(), 0.0)
+                     / redChannelMeans.size();
+    double blueMean = std::accumulate(blueChannelMeans.begin(), blueChannelMeans.end(), 0.0)
+                      / blueChannelMeans.size();
 
-    // Calculate AC components (standard deviation)
+    // AC (std dev)
     double redSumSq = 0.0;
     for (double val : redChannelMeans) {
         redSumSq += (val - redMean) * (val - redMean);
     }
-    double redAC = sqrt(redSumSq / redChannelMeans.size());
+    double redAC = std::sqrt(redSumSq / redChannelMeans.size());
 
     double blueSumSq = 0.0;
     for (double val : blueChannelMeans) {
         blueSumSq += (val - blueMean) * (val - blueMean);
     }
-    double blueAC = sqrt(blueSumSq / blueChannelMeans.size());
+    double blueAC = std::sqrt(blueSumSq / blueChannelMeans.size());
 
+    // R = (redAC / redMean) / (blueAC / blueMean)
     double R = (redAC / redMean) / (blueAC / blueMean);
 
-    // Use empirical formula (simplified example)
-    double spo2 = 110 - 25 * R; // Este valor é apenas ilustrativo
-
-    // Clamp entre 0 e 100
+    // Fórmula empírica
+    double spo2 = 110.0 - 25.0 * R; 
     spo2 = std::max(0.0, std::min(100.0, spo2));
 
+    // Armazenar nos buffers
+    redACHistory.push_back(redAC);
+    redDCHistory.push_back(redMean);
+    blueACHistory.push_back(blueAC);
+    blueDCHistory.push_back(blueMean);
+    RHistory.push_back(R);
+    spo2History.push_back(spo2);
+
+    // Retornamos a estimativa
     return spo2;
 }
 
@@ -310,6 +329,13 @@ void SignalProcessor::reset() {
     redChannelMeans.clear();
     greenChannelMeans.clear();
     blueChannelMeans.clear();
+
+    redACHistory.clear();
+    redDCHistory.clear();
+    blueACHistory.clear();
+    blueDCHistory.clear();
+    RHistory.clear();
+    spo2History.clear();
 }
 
 } // namespace my
