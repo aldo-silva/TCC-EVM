@@ -65,7 +65,7 @@ const std::deque<double>& SignalProcessor::getBlueChannelMeans() const {
 }
 
 void SignalProcessor::detrend(std::deque<double>& signal) {
-    int N = signal.size();
+    int N = (int)signal.size();
     if (N < 2) return;
 
     // Compute linear fit (least squares)
@@ -76,7 +76,7 @@ void SignalProcessor::detrend(std::deque<double>& signal) {
     for (int i = 0; i < N; ++i) {
         sumX += i;
         sumY += signal[i];
-        sumX2 += i * i;
+        sumX2 += (double)i * i;
         sumXY += i * signal[i];
     }
     double denom = N * sumX2 - sumX * sumX;
@@ -93,7 +93,7 @@ void SignalProcessor::detrend(std::deque<double>& signal) {
 }
 
 void SignalProcessor::applyHammingWindow(std::deque<double>& signal) {
-    int N = signal.size();
+    int N = (int)signal.size();
     for (int n = 0; n < N; ++n) {
         double w = 0.54 - 0.46 * cos(2 * M_PI * n / (N - 1));
         signal[n] *= w;
@@ -126,6 +126,53 @@ void SignalProcessor::saveSignal(const std::deque<double>& signal, const std::st
     }
 }
 
+// Função de interpolação linear
+// Assumindo que o sinal é amostrado uniformemente em fps, e queremos obter um sinal também
+// uniformemente amostrado na mesma taxa (pode ser alterado se necessário).
+std::deque<double> SignalProcessor::linearInterpolation(const std::deque<double>& signal, double originalFps, double targetFps) {
+    // Caso as taxas sejam as mesmas, a interpolação abaixo servirá para assegurar
+    // um sinal "uniformemente" amostrado, útil se a amostragem original não era perfeitamente uniforme.
+    // Aqui vamos assumir que já temos indices uniformes e apenas demonstrar o processo.
+    // Se a amostragem não fosse uniforme, você precisaria dos tempos de cada amostra.
+    
+    if (signal.size() < 2) {
+        return signal; // Nada a fazer
+    }
+
+    // Aqui apenas garantimos mesma taxa e comprimento. Caso queira aumentar a resolução,
+    // defina ratio > 1.0. Por exemplo, ratio = targetFps / originalFps.
+    double ratio = targetFps / originalFps;
+    size_t newSize = static_cast<size_t>(signal.size() * ratio);
+
+    // Se a taxa alvo é a mesma da original, newSize pode ser igual ao tamanho original.
+    // Caso seja igual, significa que a interpolação não altera a quantidade de pontos.
+    if (newSize == 0) newSize = signal.size(); 
+
+    std::deque<double> interpolatedSignal;
+    interpolatedSignal.resize(newSize);
+
+    // Tempo total do sinal original
+    double totalTime = (signal.size() - 1) / originalFps;
+
+    for (size_t i = 0; i < newSize; ++i) {
+        double t = i / targetFps; // tempo da nova amostra
+        double origIndex = t * originalFps; 
+        int index = (int)floor(origIndex);
+        double frac = origIndex - index;
+
+        if (index < 0) {
+            interpolatedSignal[i] = signal.front();
+        } else if (index >= (int)signal.size() - 1) {
+            interpolatedSignal[i] = signal.back();
+        } else {
+            // Interpolação linear entre signal[index] e signal[index + 1]
+            interpolatedSignal[i] = signal[index] + frac * (signal[index + 1] - signal[index]);
+        }
+    }
+
+    return interpolatedSignal;
+}
+
 double SignalProcessor::computeDominantFrequency(const std::deque<double>& inputSignal, double fps) {
     if (inputSignal.size() < 2) {
         return -1.0; // Insufficient data
@@ -141,16 +188,26 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     detrend(signal);
     saveSignal(signal, "/home/aldo/data/detrended_signal.csv");
 
-    // Step 2: Apply Hamming window
+    // Step 2: Interpolation para garantir amostragem uniforme
+    // Caso a amostragem original não seja uniforme, aqui você ajusta a taxa. 
+    // Como exemplo, mantemos a mesma taxa:
+    double targetFps = fps; 
+    std::deque<double> interpolatedSignal = linearInterpolation(signal, fps, targetFps);
+    saveSignal(interpolatedSignal, "/home/aldo/data/interpolated_signal.csv");
+
+    // Agora o sinal a ser processado adiante será o interpolado
+    signal = interpolatedSignal;
+
+    // Step 3: Apply Hamming window
     applyHammingWindow(signal);
     saveSignal(signal, "/home/aldo/data/windowed_signal.csv");
 
-    // Step 3: Normalize the signal
+    // Step 4: Normalize the signal
     normalizeSignal(signal);
     saveSignal(signal, "/home/aldo/data/normalized_signal.csv");
 
     // Prepare data for FFT
-    int N = signal.size();
+    int N = (int)signal.size();
     double* in = (double*) fftw_malloc(sizeof(double) * N);
     fftw_complex* out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * (N / 2 + 1));
     std::copy(signal.begin(), signal.end(), in);
@@ -166,7 +223,7 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     }
 
     // Save the magnitude spectrum
-    double freqResolution = fps / N;
+    double freqResolution = targetFps / N;
     std::ofstream magFile("/home/aldo/data/magnitude_spectrum.csv");
     if (magFile.is_open()) {
         for (size_t i = 0; i < magnitudes.size(); ++i) {
@@ -182,8 +239,8 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     double maxFrequency = 3.0;
 
     // Find the dominant frequency within the expected heart rate range (e.g., 0.8 - 3.0 Hz)
-    int minIndex = static_cast<int>(std::ceil(0.8 / freqResolution));
-    int maxIndex = static_cast<int>(std::floor(3.0 / freqResolution));
+    int minIndex = static_cast<int>(std::ceil(minFrequency / freqResolution));
+    int maxIndex = static_cast<int>(std::floor(maxFrequency / freqResolution));
 
     std::ofstream cutoffFile("/home/aldo/data/cutoff_frequencies.txt");
     if (cutoffFile.is_open()) {
@@ -196,7 +253,7 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     double max_magnitude = 0.0;
     int max_index = minIndex;
 
-    for (int i = minIndex; i <= maxIndex && i < magnitudes.size(); ++i) {
+    for (int i = minIndex; i <= maxIndex && i < (int)magnitudes.size(); ++i) {
         if (magnitudes[i] > max_magnitude) {
             max_magnitude = magnitudes[i];
             max_index = i;

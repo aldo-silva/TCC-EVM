@@ -4,6 +4,7 @@
 
 #include <deque>
 #include <vector>
+#include <string>
 #include <opencv2/opencv.hpp>
 
 namespace my {
@@ -34,9 +35,8 @@ private:
     void applyHammingWindow(std::deque<double>& signal);
     void normalizeSignal(std::deque<double>& signal);
     double computeDominantFrequency(const std::deque<double>& inputSignal, double fps);
-
-    // Function to save signals to files
     void saveSignal(const std::deque<double>& signal, const std::string& filename);
+    std::deque<double> linearInterpolation(const std::deque<double>& signal, double originalFps, double targetFps);
 };
 
 } // namespace my
