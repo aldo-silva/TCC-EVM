@@ -1,3 +1,4 @@
+// demo.cpp
 #include "FaceDetection.hpp"
 #include "evm.hpp"
 #include "SignalProcessor.hpp"
@@ -157,7 +158,10 @@ int main(int argc, char* argv[]) {
 
                     std::cout << "Estimated Heart Rate: " << heartRate << " bpm" << std::endl;
                     std::cout << "Estimated SpO₂: " << spo2 << "%" << std::endl;
+
+                    // Salvar parâmetros intermediários
                     signalProcessor.saveIntermediateParameters("/home/aldo/data/spo2_intermediate_params.csv");
+
                     signalProcessor.reset(); // limpa o buffer
                 }
 

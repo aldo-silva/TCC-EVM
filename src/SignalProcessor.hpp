@@ -14,17 +14,18 @@ public:
     SignalProcessor(size_t bufferSize = 300);
     ~SignalProcessor();
 
-    // Já existente
     void addFrameData(const std::vector<cv::Mat>& rgb_channels);
 
-    // Gets
     const std::deque<double>& getRedChannelMeans() const;
     const std::deque<double>& getGreenChannelMeans() const;
     const std::deque<double>& getBlueChannelMeans() const;
 
     double computeHeartRate(double fps);
     double computeSpO2();
+
     void reset();
+
+    void saveIntermediateParameters(const std::string& filename);
 
 private:
     size_t maxBufferSize;
@@ -49,10 +50,6 @@ private:
     // Interpolação
     std::deque<double> linearInterpolation(const std::deque<double>& signal,
                                            double originalFps, double targetFps);
-
-
-    void saveIntermediateParameters(const std::string& filename);
-
 };
 
 } // namespace my

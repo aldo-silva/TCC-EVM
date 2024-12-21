@@ -3,9 +3,9 @@
 #include <numeric>
 #include <algorithm>
 #include <fftw3.h>
-#include <cmath>    
-#include <fstream>  
-#include <iostream> 
+#include <cmath>    // For M_PI
+#include <fstream>  // For file operations
+#include <iostream> // For std::cerr
 
 namespace my {
 
@@ -46,10 +46,10 @@ void SignalProcessor::addFrameData(const std::vector<cv::Mat>& rgb_channels) {
         }
     }
 
-    // Salva os meios de cada canal para debug
-    saveSignal(redChannelMeans,   "/home/aldo/data/redChannelMeans.csv");
+    // Save the channel means after updating
+    saveSignal(redChannelMeans, "/home/aldo/data/redChannelMeans.csv");
     saveSignal(greenChannelMeans, "/home/aldo/data/greenChannelMeans.csv");
-    saveSignal(blueChannelMeans,  "/home/aldo/data/blueChannelMeans.csv");
+    saveSignal(blueChannelMeans, "/home/aldo/data/blueChannelMeans.csv");
 }
 
 const std::deque<double>& SignalProcessor::getRedChannelMeans() const {
@@ -68,18 +68,19 @@ void SignalProcessor::detrend(std::deque<double>& signal) {
     int N = (int)signal.size();
     if (N < 2) return;
 
+    // Compute linear fit (least squares)
     double sumX = 0.0;
     double sumY = 0.0;
     double sumX2 = 0.0;
     double sumXY = 0.0;
     for (int i = 0; i < N; ++i) {
-        sumX  += i;
-        sumY  += signal[i];
+        sumX += i;
+        sumY += signal[i];
         sumX2 += (double)i * i;
         sumXY += i * signal[i];
     }
     double denom = N * sumX2 - sumX * sumX;
-    if (denom == 0) return; 
+    if (denom == 0) return; // Prevent division by zero
 
     double a = (N * sumXY - sumX * sumY) / denom;
     double b = (sumY * sumX2 - sumX * sumXY) / denom;
@@ -125,13 +126,13 @@ void SignalProcessor::saveSignal(const std::deque<double>& signal, const std::st
     }
 }
 
-// NOVO: Salva parâmetros intermediários
+// NOVO: Método para salvar parâmetros intermediários
 void SignalProcessor::saveIntermediateParameters(const std::string& filename) {
     std::ofstream file(filename);
     if (file.is_open()) {
         file << "Index,RedAC,RedDC,BlueAC,BlueDC,R,SpO2\n";
-        size_t n = std::min({ redACHistory.size(), 
-                              redDCHistory.size(), 
+        size_t n = std::min({ redACHistory.size(),
+                              redDCHistory.size(),
                               blueACHistory.size(),
                               blueDCHistory.size(),
                               RHistory.size(),
@@ -151,11 +152,11 @@ void SignalProcessor::saveIntermediateParameters(const std::string& filename) {
     }
 }
 
-// Interpolação linear
+// Função de interpolação linear
 std::deque<double> SignalProcessor::linearInterpolation(const std::deque<double>& signal,
                                                         double originalFps, double targetFps) {
     if (signal.size() < 2) {
-        return signal; 
+        return signal; // Nada a fazer
     }
 
     double ratio = targetFps / originalFps;
@@ -164,8 +165,9 @@ std::deque<double> SignalProcessor::linearInterpolation(const std::deque<double>
 
     std::deque<double> interpolatedSignal(newSize);
 
+    // Para este exemplo, assumimos que o tempo total é (size-1)/originalFps
     for (size_t i = 0; i < newSize; ++i) {
-        double t = i / targetFps;         
+        double t = i / targetFps;         // tempo da nova amostra
         double origIndex = t * originalFps;
         int index = static_cast<int>(std::floor(origIndex));
         double frac = origIndex - index;
@@ -175,7 +177,7 @@ std::deque<double> SignalProcessor::linearInterpolation(const std::deque<double>
         } else if (index >= (int)signal.size() - 1) {
             interpolatedSignal[i] = signal.back();
         } else {
-            interpolatedSignal[i] = signal[index] 
+            interpolatedSignal[i] = signal[index]
                 + frac * (signal[index + 1] - signal[index]);
         }
     }
@@ -194,10 +196,11 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     detrend(signal);
     saveSignal(signal, "/home/aldo/data/detrended_signal.csv");
 
-    double targetFps = fps; 
+    double targetFps = fps;
     std::deque<double> interpolatedSignal = linearInterpolation(signal, fps, targetFps);
     saveSignal(interpolatedSignal, "/home/aldo/data/interpolated_signal.csv");
 
+    // Substituir o buffer para as etapas seguintes
     signal = interpolatedSignal;
 
     applyHammingWindow(signal);
@@ -206,6 +209,7 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     normalizeSignal(signal);
     saveSignal(signal, "/home/aldo/data/normalized_signal.csv");
 
+    // Prepare data for FFT
     int N = (int)signal.size();
     double* in = (double*) fftw_malloc(sizeof(double) * N);
     fftw_complex* out = (fftw_complex*) fftw_malloc(sizeof(fftw_complex) * (N / 2 + 1));
@@ -214,6 +218,7 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     fftw_plan p = fftw_plan_dft_r2c_1d(N, in, out, FFTW_ESTIMATE);
     fftw_execute(p);
 
+    // Compute magnitude spectrum
     std::vector<double> magnitudes(N / 2 + 1);
     for (int i = 0; i < N / 2 + 1; ++i) {
         magnitudes[i] = std::sqrt(out[i][0] * out[i][0] + out[i][1] * out[i][1]);
@@ -321,7 +326,14 @@ double SignalProcessor::computeSpO2() {
     RHistory.push_back(R);
     spo2History.push_back(spo2);
 
-    // Retornamos a estimativa
+    // Garantir que os buffers não excedam o tamanho máximo
+    if (redACHistory.size() > maxBufferSize) redACHistory.pop_front();
+    if (redDCHistory.size() > maxBufferSize) redDCHistory.pop_front();
+    if (blueACHistory.size() > maxBufferSize) blueACHistory.pop_front();
+    if (blueDCHistory.size() > maxBufferSize) blueDCHistory.pop_front();
+    if (RHistory.size() > maxBufferSize) RHistory.pop_front();
+    if (spo2History.size() > maxBufferSize) spo2History.pop_front();
+
     return spo2;
 }
 
@@ -330,6 +342,7 @@ void SignalProcessor::reset() {
     greenChannelMeans.clear();
     blueChannelMeans.clear();
 
+    // Resetar buffers intermediários
     redACHistory.clear();
     redDCHistory.clear();
     blueACHistory.clear();
