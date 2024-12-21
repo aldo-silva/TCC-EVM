@@ -1,4 +1,3 @@
-// SignalProcessor.cpp
 #include "SignalProcessor.hpp"
 #include <numeric>
 #include <algorithm>
@@ -127,37 +126,24 @@ void SignalProcessor::saveSignal(const std::deque<double>& signal, const std::st
 }
 
 // Função de interpolação linear
-// Assumindo que o sinal é amostrado uniformemente em fps, e queremos obter um sinal também
-// uniformemente amostrado na mesma taxa (pode ser alterado se necessário).
-std::deque<double> SignalProcessor::linearInterpolation(const std::deque<double>& signal, double originalFps, double targetFps) {
-    // Caso as taxas sejam as mesmas, a interpolação abaixo servirá para assegurar
-    // um sinal "uniformemente" amostrado, útil se a amostragem original não era perfeitamente uniforme.
-    // Aqui vamos assumir que já temos indices uniformes e apenas demonstrar o processo.
-    // Se a amostragem não fosse uniforme, você precisaria dos tempos de cada amostra.
-    
+std::deque<double> SignalProcessor::linearInterpolation(const std::deque<double>& signal,
+                                                        double originalFps, double targetFps) {
     if (signal.size() < 2) {
         return signal; // Nada a fazer
     }
 
-    // Aqui apenas garantimos mesma taxa e comprimento. Caso queira aumentar a resolução,
-    // defina ratio > 1.0. Por exemplo, ratio = targetFps / originalFps.
     double ratio = targetFps / originalFps;
     size_t newSize = static_cast<size_t>(signal.size() * ratio);
 
-    // Se a taxa alvo é a mesma da original, newSize pode ser igual ao tamanho original.
-    // Caso seja igual, significa que a interpolação não altera a quantidade de pontos.
-    if (newSize == 0) newSize = signal.size(); 
+    if (newSize == 0) newSize = signal.size();
 
-    std::deque<double> interpolatedSignal;
-    interpolatedSignal.resize(newSize);
+    std::deque<double> interpolatedSignal(newSize);
 
-    // Tempo total do sinal original
-    double totalTime = (signal.size() - 1) / originalFps;
-
+    // Para este exemplo, assumimos que o tempo total é (size-1)/originalFps
     for (size_t i = 0; i < newSize; ++i) {
-        double t = i / targetFps; // tempo da nova amostra
-        double origIndex = t * originalFps; 
-        int index = (int)floor(origIndex);
+        double t = i / targetFps;         // tempo da nova amostra
+        double origIndex = t * originalFps;
+        int index = static_cast<int>(floor(origIndex));
         double frac = origIndex - index;
 
         if (index < 0) {
@@ -165,7 +151,6 @@ std::deque<double> SignalProcessor::linearInterpolation(const std::deque<double>
         } else if (index >= (int)signal.size() - 1) {
             interpolatedSignal[i] = signal.back();
         } else {
-            // Interpolação linear entre signal[index] e signal[index + 1]
             interpolatedSignal[i] = signal[index] + frac * (signal[index + 1] - signal[index]);
         }
     }
@@ -189,13 +174,11 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     saveSignal(signal, "/home/aldo/data/detrended_signal.csv");
 
     // Step 2: Interpolation para garantir amostragem uniforme
-    // Caso a amostragem original não seja uniforme, aqui você ajusta a taxa. 
-    // Como exemplo, mantemos a mesma taxa:
     double targetFps = fps; 
     std::deque<double> interpolatedSignal = linearInterpolation(signal, fps, targetFps);
     saveSignal(interpolatedSignal, "/home/aldo/data/interpolated_signal.csv");
 
-    // Agora o sinal a ser processado adiante será o interpolado
+    // Substituir o buffer para as etapas seguintes
     signal = interpolatedSignal;
 
     // Step 3: Apply Hamming window
@@ -238,10 +221,11 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     double minFrequency = 0.8;
     double maxFrequency = 3.0;
 
-    // Find the dominant frequency within the expected heart rate range (e.g., 0.8 - 3.0 Hz)
+    // Find the dominant frequency within the expected heart rate range
     int minIndex = static_cast<int>(std::ceil(minFrequency / freqResolution));
     int maxIndex = static_cast<int>(std::floor(maxFrequency / freqResolution));
 
+    // Salvar informação sobre min e max
     std::ofstream cutoffFile("/home/aldo/data/cutoff_frequencies.txt");
     if (cutoffFile.is_open()) {
         cutoffFile << minFrequency << "," << maxFrequency;
@@ -261,8 +245,9 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     }
 
     // Convert index to frequency
-    double frequency = max_index * freqResolution; // in Hz
+    double frequency = max_index * freqResolution; // Hz
 
+    // Save the dominant frequency
     std::ofstream freqFile("/home/aldo/data/dominant_frequency.txt");
     if (freqFile.is_open()) {
         freqFile << frequency;
@@ -313,9 +298,9 @@ double SignalProcessor::computeSpO2() {
     double R = (redAC / redMean) / (blueAC / blueMean);
 
     // Use empirical formula (simplified example)
-    double spo2 = 110 - 25 * R; // This formula is a simplification and may not be accurate
+    double spo2 = 110 - 25 * R; // Este valor é apenas ilustrativo
 
-    // Clamp the value between 0 and 100
+    // Clamp entre 0 e 100
     spo2 = std::max(0.0, std::min(100.0, spo2));
 
     return spo2;

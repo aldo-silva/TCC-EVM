@@ -1,9 +1,9 @@
 #include "FaceDetection.hpp"
 #include "evm.hpp"
+#include "SignalProcessor.hpp"
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
-#include "SignalProcessor.hpp"
 
 #define SHOW_FPS (1)
 
@@ -11,12 +11,17 @@
 #include <chrono>
 #endif
 
-const std::string GSTREAMER_PIPELINE = "nvarguscamerasrc ! video/x-raw(memory:NVMM), width=(int)640, height=(int)360, format=(string)NV12, framerate=(fraction)30/1 ! nvvidconv flip-method=2 ! video/x-raw, format=(string)BGRx ! videoconvert ! video/x-raw, format=(string)BGR ! appsink";
+// Ajuste para sua pipeline GStreamer
+const std::string GSTREAMER_PIPELINE = 
+    "nvarguscamerasrc ! video/x-raw(memory:NVMM), width=(int)640, height=(int)360, format=(string)NV12, framerate=(fraction)30/1 ! "
+    "nvvidconv flip-method=2 ! video/x-raw, format=(string)BGRx ! "
+    "videoconvert ! video/x-raw, format=(string)BGR ! appsink";
 
 int main(int argc, char* argv[]) {
     my::FaceDetection faceDetector("/home/aldo/Documentos/media_pipe-main/models");
     my::evm evm_processor;
     my::SignalProcessor signalProcessor;
+
     cv::VideoCapture cap(GSTREAMER_PIPELINE, cv::CAP_GSTREAMER);
     bool success = cap.isOpened();
     if (!success) {
@@ -30,12 +35,10 @@ int main(int argc, char* argv[]) {
     float fps = 0;
 #endif
 
-    // Definir as frequências de corte de acordo com o FPS esperado
-    float lowFreq = 0.83f; // Frequência cardíaca mínima (~50 bpm)
-    float highFreq = 3.0f; // Frequência cardíaca máxima (~180 bpm)
-    float alpha = 50.0f;   // Fator de amplificação
+    float lowFreq = 0.83f;  // Frequência cardíaca mínima (~50 bpm)
+    float highFreq = 3.0f;  // Frequência cardíaca máxima (~180 bpm)
+    float alpha = 50.0f;    // Fator de amplificação
 
-    // Variáveis para armazenar os valores de Heart Rate e SpO₂
     double heartRate = 0.0;
     double spo2 = 0.0;
 
@@ -43,12 +46,14 @@ int main(int argc, char* argv[]) {
         cv::Mat frame;
         success = cap.read(frame);
         if (!success) break;
+
         cv::flip(frame, frame, 1);
 
 #if SHOW_FPS
         auto start = std::chrono::high_resolution_clock::now();
 #endif
 
+        // Detecção de rosto
         faceDetector.loadImageToInput(frame);
         faceDetector.runInference();
 
@@ -59,98 +64,124 @@ int main(int argc, char* argv[]) {
         sum += inferenceTime;
         count += 1;
         fps = 1e3f / inferenceTime;
-        cv::putText(frame, std::to_string(static_cast<int>(fps)) + " FPS", cv::Point(20, 70), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0, 196, 255), 2);
+        cv::putText(frame, std::to_string(static_cast<int>(fps)) + " FPS",
+                    cv::Point(20, 70), cv::FONT_HERSHEY_PLAIN, 2,
+                    cv::Scalar(0, 196, 255), 2);
 #endif
 
         cv::Rect roi = faceDetector.getFaceRoi();
         if (roi.width > 0 && roi.height > 0) {
+            // Validar ROI dentro da imagem (defensive programming)
+            roi &= cv::Rect(0, 0, frame.cols, frame.rows);
+
             cv::Mat croppedFace = faceDetector.cropFrame(roi);
+            if (!croppedFace.empty()) {
+                // ROI da testa
+                float widthFraction        = 0.7f;
+                float heightFraction       = 0.25f;
+                float verticalOffsetFrac   = 0.2f;
 
-            // Definir proporções da testa em relação à face
-            float widthFraction = 0.7f;
-            float heightFraction = 0.25f;
-            float verticalOffsetFraction = 0.2f;
+                int foreheadWidth  = static_cast<int>(roi.width * widthFraction);
+                int foreheadHeight = static_cast<int>(roi.height * heightFraction);
 
-            int foreheadWidth = static_cast<int>(roi.width * widthFraction);
-            int foreheadHeight = static_cast<int>(roi.height * heightFraction);
+                int foreheadX = (roi.width - foreheadWidth) / 2;
+                int foreheadY = static_cast<int>(roi.height * verticalOffsetFrac);
 
-            // Coordenadas do ROI da testa
-            int foreheadX = roi.x + (roi.width - foreheadWidth) / 2; // Centralizado horizontalmente
-            int foreheadY = roi.y + static_cast<int>(roi.height * verticalOffsetFraction); // Início mais abaixo
+                cv::Rect foreheadRoi(foreheadX, foreheadY, foreheadWidth, foreheadHeight);
 
-            cv::Rect foreheadRoi(foreheadX, foreheadY, foreheadWidth, foreheadHeight);
-
-            // Validar se o ROI está dentro do frame
-            if (!croppedFace.empty() && foreheadRoi.width > 0 && foreheadRoi.height > 0) {
+                // Ajustar ao croppedFace
                 foreheadRoi &= cv::Rect(0, 0, croppedFace.cols, croppedFace.rows);
 
-                if (foreheadRoi.width > 0 && foreheadRoi.height > 0) {
+                // Verificar se é válido
+                if (foreheadRoi.width > 1 && foreheadRoi.height > 1) {
                     cv::Mat croppedForehead = croppedFace(foreheadRoi);
+                    if (!croppedForehead.empty() &&
+                        croppedForehead.cols > 1 &&
+                        croppedForehead.rows > 1) {
 
-                    // Verificar se o ROI da testa é válido
-                    if (!croppedForehead.empty()) {
                         cv::Mat ycrcb_forehead;
                         cv::cvtColor(croppedForehead, ycrcb_forehead, cv::COLOR_BGR2YCrCb);
 
                         std::vector<cv::Mat> ycrcb_channels;
                         cv::split(ycrcb_forehead, ycrcb_channels);
 
-                        // Processar o canal Cb da região da testa
-                        cv::Mat processed_channel = evm_processor.processChannel(
-                            ycrcb_channels[2], lowFreq, highFreq, fps, alpha);
+                        // Checar canal Cb (índice 2)
+                        if (ycrcb_channels.size() == 3 && !ycrcb_channels[2].empty()) {
+                            // Processar o canal Cb
+                            cv::Mat processed_channel = evm_processor.processChannel(
+                                ycrcb_channels[2], lowFreq, highFreq, fps, alpha);
 
-                        // Substituir o canal processado
-                        ycrcb_channels[2] = processed_channel;
-                        cv::Mat processed_ycrcb;
-                        cv::merge(ycrcb_channels, processed_ycrcb);
+                            // Verificar se não está vazio
+                            if (!processed_channel.empty()) {
+                                // Substituir e converter de volta
+                                ycrcb_channels[2] = processed_channel;
+                                cv::Mat processed_ycrcb;
+                                cv::merge(ycrcb_channels, processed_ycrcb);
 
-                        // Converter de volta para BGR e copiar para a face
-                        cv::Mat processed_bgr;
-                        cv::cvtColor(processed_ycrcb, processed_bgr, cv::COLOR_YCrCb2BGR);
+                                cv::Mat processed_bgr;
+                                cv::cvtColor(processed_ycrcb, processed_bgr, cv::COLOR_YCrCb2BGR);
 
-                        processed_bgr.copyTo(croppedFace(foreheadRoi));
+                                // Ajustar tamanho, se necessário
+                                if (processed_bgr.size() != croppedForehead.size()) {
+                                    cv::resize(processed_bgr, processed_bgr, croppedForehead.size());
+                                }
 
-                        // Adicionar dados ao processador de sinais
-                        std::vector<cv::Mat> rgb_channels;
-                        cv::split(processed_bgr, rgb_channels);
-                        signalProcessor.addFrameData(rgb_channels);
+                                processed_bgr.copyTo(croppedFace(foreheadRoi));
+
+                                // Atualizar o processador de sinais
+                                std::vector<cv::Mat> rgb_channels;
+                                cv::split(processed_bgr, rgb_channels);
+
+                                if (rgb_channels.size() == 3 &&
+                                    !rgb_channels[0].empty() &&
+                                    !rgb_channels[1].empty() &&
+                                    !rgb_channels[2].empty()) {
+                                    signalProcessor.addFrameData(rgb_channels);
+                                }
+                            }
+                        }
                     }
                 }
-            }
 
-            // Desenhar o ROI da face e da testa
-            cv::rectangle(frame, roi, cv::Scalar(0, 255, 0), 2);       // Verde: face
-            cv::rectangle(frame, foreheadRoi, cv::Scalar(255, 0, 0), 2); // Azul: testa
+                // Desenhar o ROI no frame principal
+                cv::rectangle(frame, roi, cv::Scalar(0, 255, 0), 2);
+                cv::Point topLeft(roi.x + foreheadX, roi.y + foreheadY);
+                cv::Point bottomRight(roi.x + foreheadX + foreheadWidth,
+                                      roi.y + foreheadY + foreheadHeight);
+                cv::rectangle(frame, cv::Rect(topLeft, bottomRight), cv::Scalar(255, 0, 0), 2);
 
-            // Calcular frequência cardíaca e SpO₂ se o buffer estiver cheio
-            if (signalProcessor.getGreenChannelMeans().size() == 300) { 
-                heartRate = signalProcessor.computeHeartRate(fps);
-                spo2 = signalProcessor.computeSpO2();
+                // Quando o buffer tiver 300 amostras, calcular HR e SpO2
+                if (signalProcessor.getGreenChannelMeans().size() == 300) {
+                    heartRate = signalProcessor.computeHeartRate(fps);
+                    spo2 = signalProcessor.computeSpO2();
 
-                std::cout << "Estimated Heart Rate: " << heartRate << " bpm" << std::endl;
-                std::cout << "Estimated SpO₂: " << spo2 << "%" << std::endl;
+                    std::cout << "Estimated Heart Rate: " << heartRate << " bpm" << std::endl;
+                    std::cout << "Estimated SpO₂: " << spo2 << "%" << std::endl;
 
-                signalProcessor.reset(); // Resetar o buffer após o cálculo
-            }
+                    signalProcessor.reset(); // limpa o buffer
+                }
 
-            // Adicionar informações na imagem
-            cv::Point textOrgHR(roi.x, roi.y - 10);
-            cv::Point textOrgSpO2(roi.x, roi.y - 30);
+                // Mostrar resultados na tela
+                cv::Point textOrgHR(roi.x, roi.y - 10);
+                cv::Point textOrgSpO2(roi.x, roi.y - 30);
 
-            if (heartRate > 0.0) {
-                cv::putText(frame, "HR: " + std::to_string(static_cast<int>(heartRate)) + " bpm",
-                            textOrgHR, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(255, 0, 0), 2);
-            }
-
-            if (spo2 > 0.0) {
-                cv::putText(frame, "SpO2: " + std::to_string(static_cast<int>(spo2)) + " %",
-                            textOrgSpO2, cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 0, 255), 2);
+                if (heartRate > 0.0) {
+                    cv::putText(frame,
+                                "HR: " + std::to_string(static_cast<int>(heartRate)) + " bpm",
+                                textOrgHR, cv::FONT_HERSHEY_SIMPLEX, 0.7,
+                                cv::Scalar(255, 0, 0), 2);
+                }
+                if (spo2 > 0.0) {
+                    cv::putText(frame,
+                                "SpO2: " + std::to_string(static_cast<int>(spo2)) + " %",
+                                textOrgSpO2, cv::FONT_HERSHEY_SIMPLEX, 0.7,
+                                cv::Scalar(0, 0, 255), 2);
+                }
             }
         }
 
         cv::imshow("Face Detector", frame);
-
-        if (cv::waitKey(10) == 27) break;  // Sair se 'ESC' for pressionado
+        if (cv::waitKey(10) == 27) break; // ESC para sair
     }
 
 #if SHOW_FPS
