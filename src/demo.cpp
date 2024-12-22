@@ -2,9 +2,11 @@
 #include "FaceDetection.hpp"
 #include "evm.hpp"
 #include "SignalProcessor.hpp"
+#include "database.hpp"
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+
 
 #define SHOW_FPS (1)
 
@@ -22,6 +24,13 @@ int main(int argc, char* argv[]) {
     my::FaceDetection faceDetector("/home/aldo/Documentos/media_pipe-main/models");
     my::evm evm_processor;
     my::SignalProcessor signalProcessor;
+
+    Database db;
+    if (!db.open("measurement.db")) {
+        std::cerr << "Falha ao abrir o banco de dados" << std::endl;
+        return 1;
+    }
+    db.createTable();
 
     cv::VideoCapture cap(GSTREAMER_PIPELINE, cv::CAP_GSTREAMER);
     bool success = cap.isOpened();
@@ -162,6 +171,8 @@ int main(int argc, char* argv[]) {
                     // Salvar parâmetros intermediários
                     signalProcessor.saveIntermediateParameters("/home/aldo/data/spo2_intermediate_params.csv");
 
+                    db.insertMeasurement(heartRate, spo2);
+
                     signalProcessor.reset(); // limpa o buffer
                 }
 
@@ -194,5 +205,6 @@ int main(int argc, char* argv[]) {
 
     cap.release();
     cv::destroyAllWindows();
+    db.close();
     return 0;
 }
