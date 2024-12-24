@@ -22,6 +22,7 @@ set(SOURCES
     FaceDetection.cpp
     SignalProcessor.cpp
     evm.cpp
+    Database.cpp
 )
 set(HEADERS
     ModelLoader.hpp
@@ -29,14 +30,28 @@ set(HEADERS
     FaceDetection.hpp
     SignalProcessor.hpp
     evm.hpp
+    Database.hpp
 )
 
 # Adiciona o executável
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
-# Encontrar OpenCV (opcional, se necessário especificamente aqui)
+# Encontrar OpenCV
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
+
+# Find SQLite3 using pkg-config
+find_package(PkgConfig REQUIRED)
+pkg_search_module(SQLITE3 REQUIRED sqlite3)
+
+if(SQLITE3_FOUND)
+    message(STATUS "SQLite3 found: ${SQLITE3_INCLUDE_DIRS}")
+    message(STATUS "SQLite3 libraries: ${SQLITE3_LIBRARIES}")
+    target_include_directories(${PROJECT_NAME} PRIVATE ${SQLITE3_INCLUDE_DIRS})
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${SQLITE3_LIBRARIES})
+else()
+    message(FATAL_ERROR "SQLite3 not found")
+endif()
 
 # Linkar bibliotecas
 target_link_libraries(${PROJECT_NAME} PRIVATE 

@@ -1,4 +1,5 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/demo.dir/Database.cpp.o"
   "CMakeFiles/demo.dir/DetectionPostProcess.cpp.o"
   "CMakeFiles/demo.dir/FaceDetection.cpp.o"
   "CMakeFiles/demo.dir/ModelLoader.cpp.o"

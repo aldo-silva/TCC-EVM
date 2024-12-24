@@ -144,6 +144,33 @@ demo/fast:
 	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/build
 .PHONY : demo/fast
 
+Database.o: Database.cpp.o
+
+.PHONY : Database.o
+
+# target to build an object file
+Database.cpp.o:
+	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/Database.cpp.o
+.PHONY : Database.cpp.o
+
+Database.i: Database.cpp.i
+
+.PHONY : Database.i
+
+# target to preprocess a source file
+Database.cpp.i:
+	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/Database.cpp.i
+.PHONY : Database.cpp.i
+
+Database.s: Database.cpp.s
+
+.PHONY : Database.s
+
+# target to generate assembly for a file
+Database.cpp.s:
+	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/Database.cpp.s
+.PHONY : Database.cpp.s
+
 DetectionPostProcess.o: DetectionPostProcess.cpp.o
 
 .PHONY : DetectionPostProcess.o
@@ -315,6 +342,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... demo"
+	@echo "... Database.o"
+	@echo "... Database.i"
+	@echo "... Database.s"
 	@echo "... DetectionPostProcess.o"
 	@echo "... DetectionPostProcess.i"
 	@echo "... DetectionPostProcess.s"

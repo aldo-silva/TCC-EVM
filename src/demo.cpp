@@ -2,7 +2,7 @@
 #include "FaceDetection.hpp"
 #include "evm.hpp"
 #include "SignalProcessor.hpp"
-#include "database.hpp"
+#include "Database.hpp"
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     my::SignalProcessor signalProcessor;
 
     Database db;
-    if (!db.open("measurement.db")) {
+    if (!db.open("/home/aldo/Documentos/TCC-EVM/server/measurement.db")) {
         std::cerr << "Falha ao abrir o banco de dados" << std::endl;
         return 1;
     }
