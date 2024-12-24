@@ -1,39 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8">
-    <title>Minha Central de Monitoramento</title>
-    <style>
-        table {
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid #ccc;
-            padding: 8px 12px;
-        }
-    </style>
+    <title>Measurements</title>
 </head>
 <body>
-    <h1>Histórico de Mediçōes</h1>
-    <table>
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Timestamp</th>
-                <th>Heart Rate (bpm)</th>
-                <th>SpO2 (%)</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for row in measurements %}
-            <tr>
-                <td>{{ row[0] }}</td>
-                <td>{{ row[1] }}</td>
-                <td>{{ row[2] }}</td>
-                <td>{{ row[3] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <h1>Lista de medições</h1>
+    <div id="measurements-container"></div>
+
+    <script>
+      async function fetchMeasurements() {
+        try {
+          const response = await fetch('/api/measurements');
+          const data = await response.json();
+
+          // Montar HTML e colocar dentro de measurements-container
+          let html = '<table border="1"><tr><th>ID</th><th>Timestamp</th><th>HeartRate</th><th>SPO2</th></tr>';
+          for (let m of data) {
+            html += `<tr>
+                      <td>${m.id}</td>
+                      <td>${m.timestamp}</td>
+                      <td>${m.heartRate}</td>
+                      <td>${m.spo2}</td>
+                     </tr>`;
+          }
+          html += '</table>';
+
+          document.getElementById('measurements-container').innerHTML = html;
+        } catch (error) {
+          console.error('Erro ao obter dados:', error);
+        }
+      }
+
+      // Chama a função imediatamente ao carregar a página
+      fetchMeasurements();
+
+      // E continua chamando a cada 2 segundos (2000 ms)
+      setInterval(fetchMeasurements, 2000);
+    </script>
 </body>
 </html>
