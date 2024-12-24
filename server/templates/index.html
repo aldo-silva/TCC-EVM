@@ -1,41 +1,169 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
-    <title>Measurements</title>
+  <meta charset="UTF-8">
+  <title>Measurements</title>
+  <!-- Bootstrap CSS (opcional, mas deixa tudo mais bonito) -->
+  <link 
+    rel="stylesheet" 
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css"
+  >
+  <!-- Chart.js para o gráfico -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body>
-    <h1>Lista de medições</h1>
-    <div id="measurements-container"></div>
+<body class="bg-light">
+  <div class="container py-3">
+    <h1 class="mb-4">Medições (últimas 50)</h1>
 
-    <script>
-      async function fetchMeasurements() {
-        try {
-          const response = await fetch('/api/measurements');
-          const data = await response.json();
+    <!-- Área para exibir alertas -->
+    <div id="alertas"></div>
 
-          // Montar HTML e colocar dentro de measurements-container
-          let html = '<table border="1"><tr><th>ID</th><th>Timestamp</th><th>HeartRate</th><th>SPO2</th></tr>';
-          for (let m of data) {
-            html += `<tr>
-                      <td>${m.id}</td>
-                      <td>${m.timestamp}</td>
-                      <td>${m.heartRate}</td>
-                      <td>${m.spo2}</td>
-                     </tr>`;
-          }
-          html += '</table>';
+    <!-- Seção do gráfico -->
+    <div class="mb-4">
+      <canvas id="myChart" style="max-height: 400px;"></canvas>
+    </div>
 
-          document.getElementById('measurements-container').innerHTML = html;
-        } catch (error) {
-          console.error('Erro ao obter dados:', error);
+    <!-- Tabela das medições -->
+    <div class="card">
+      <div class="card-body">
+        <h2 class="card-title">Lista de medições</h2>
+        <div id="measurements-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let myChart = null; // variável global para o gráfico
+
+    async function fetchMeasurements() {
+      try {
+        const response = await fetch('/api/measurements');
+        const data = await response.json();
+
+        // -------------------------
+        // 1) Monta a Tabela
+        // -------------------------
+        let tableHTML = `
+          <table class="table table-striped table-bordered">
+            <thead class="table-dark">
+              <tr>
+                <th>ID</th>
+                <th>Timestamp</th>
+                <th>Heart Rate</th>
+                <th>SPO2</th>
+              </tr>
+            </thead>
+            <tbody>
+        `;
+        for (let m of data) {
+          tableHTML += `
+            <tr>
+              <td>${m.id}</td>
+              <td>${m.timestamp}</td>
+              <td>${m.heartRate}</td>
+              <td>${m.spo2}</td>
+            </tr>
+          `;
         }
+        tableHTML += '</tbody></table>';
+        document.getElementById('measurements-container').innerHTML = tableHTML;
+
+
+        // -------------------------
+        // 2) Verifica alertas
+        // -------------------------
+        // Se qualquer heartRate > 100 ou spo2 < 95, vamos exibir um alerta
+        let alertMessages = [];
+        for (let m of data) {
+          if (m.heartRate > 100) {
+            alertMessages.push(`ID ${m.id}: Heart Rate alto = ${m.heartRate}`);
+          }
+          if (m.spo2 < 95) {
+            alertMessages.push(`ID ${m.id}: SPO2 baixo = ${m.spo2}`);
+          }
+        }
+
+        let alertHtml = '';
+        // Limpa a área de alertas
+        document.getElementById('alertas').innerHTML = '';
+        // Para cada alerta, cria um "alert" do Bootstrap
+        for (let msg of alertMessages) {
+          alertHtml += `
+            <div class="alert alert-danger" role="alert">
+              <strong>Alerta!</strong> ${msg}
+            </div>
+          `;
+        }
+        document.getElementById('alertas').innerHTML = alertHtml;
+
+
+        // -------------------------
+        // 3) Atualiza o Gráfico
+        // -------------------------
+        // Reverter para mostrar a mais antiga à esquerda (opcional)
+        const labels = data.map(d => d.timestamp).reverse();
+        const hrValues = data.map(d => d.heartRate).reverse();
+        const spo2Values = data.map(d => d.spo2).reverse();
+
+        // Se o gráfico ainda não existe, cria. Senão, atualiza.
+        if (!myChart) {
+          const ctx = document.getElementById('myChart').getContext('2d');
+          myChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: labels,
+              datasets: [
+                {
+                  label: 'Heart Rate',
+                  data: hrValues,
+                  borderColor: 'red',
+                  backgroundColor: 'rgba(255, 0, 0, 0.2)',
+                  fill: true,
+                  tension: 0.1
+                },
+                {
+                  label: 'SPO2',
+                  data: spo2Values,
+                  borderColor: 'blue',
+                  backgroundColor: 'rgba(0, 0, 255, 0.2)',
+                  fill: true,
+                  tension: 0.1
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              scales: {
+                y: { beginAtZero: true }
+              },
+              plugins: {
+                legend: { position: 'bottom' }
+              }
+            }
+          });
+        } else {
+          // Apenas atualizar dados
+          myChart.data.labels = labels;
+          myChart.data.datasets[0].data = hrValues;
+          myChart.data.datasets[1].data = spo2Values;
+          myChart.update();
+        }
+
+      } catch (error) {
+        console.error('Erro ao obter dados:', error);
       }
+    }
 
-      // Chama a função imediatamente ao carregar a página
-      fetchMeasurements();
+    // Chama a função logo ao carregar a página
+    fetchMeasurements();
 
-      // E continua chamando a cada 2 segundos (2000 ms)
-      setInterval(fetchMeasurements, 2000);
-    </script>
+    // Atualiza a cada 2 segundos
+    setInterval(fetchMeasurements, 2000);
+  </script>
+
+  <!-- Bootstrap JS (opcional, se precisar de componentes do Bootstrap) -->
+  <script 
+    src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js">
+  </script>
 </body>
 </html>

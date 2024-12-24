@@ -5,17 +5,25 @@ app = Flask(__name__)
 
 @app.route('/')
 def index():
+    # Renderiza o "index.html"
     return render_template('index.html')
 
 @app.route('/api/measurements')
 def get_measurements():
     conn = sqlite3.connect('measurement.db')
     cursor = conn.cursor()
-    cursor.execute("SELECT id, timestamp, heartRate, spo2 FROM measurements ORDER BY id DESC")
+    
+    # Pegamos as 50 medições mais recentes (ORDER BY id DESC LIMIT 50)
+    cursor.execute("""
+        SELECT id, timestamp, heartRate, spo2
+        FROM measurements
+        ORDER BY id DESC
+        LIMIT 50
+    """)
     data = cursor.fetchall()
     conn.close()
-    # Transformar em dicionário para retornar como JSON
-    # Algo do tipo: [{"id": 1, "timestamp": ..., "heartRate":..., "spo2":...}, ...]
+
+    # Monta a lista de dicionários
     measurements = []
     for row in data:
         measurements.append({
@@ -25,6 +33,7 @@ def get_measurements():
             "spo2": row[3]
         })
 
+    # Retorna em formato JSON
     return jsonify(measurements)
 
 if __name__ == "__main__":
