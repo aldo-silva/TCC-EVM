@@ -20,12 +20,14 @@ set(SOURCES
     ModelLoader.cpp
     DetectionPostProcess.cpp
     FaceDetection.cpp
+    SignalProcessor.cpp
     evm.cpp
 )
 set(HEADERS
     ModelLoader.hpp
     DetectionPostProcess.hpp
     FaceDetection.hpp
+    SignalProcessor.hpp
     evm.hpp
 )
 
@@ -43,5 +45,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     dl
     pthread
     fftw3f  # Nome da biblioteca diretamente
+    fftw3
 )
 

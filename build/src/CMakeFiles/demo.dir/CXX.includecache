@@ -6,15 +6,27 @@
 
 #IncludeRegexTransform: 
 
-/home/aldo/Documentos/TCC-EVM/src/evm.cpp
-evm.hpp
-/home/aldo/Documentos/TCC-EVM/src/evm.hpp
-iostream
+/home/aldo/Documentos/TCC-EVM/src/SignalProcessor.cpp
+SignalProcessor.hpp
+/home/aldo/Documentos/TCC-EVM/src/SignalProcessor.hpp
+numeric
+-
+algorithm
 -
 fftw3.h
 -
+cmath
+-
+fstream
+-
+iostream
+-
 
-/home/aldo/Documentos/TCC-EVM/src/evm.hpp
+/home/aldo/Documentos/TCC-EVM/src/SignalProcessor.hpp
+deque
+-
+vector
+-
 opencv2/opencv.hpp
 -
 
