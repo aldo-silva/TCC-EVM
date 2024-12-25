@@ -6,14 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/home/aldo/Documentos/TCC-EVM/src/Database.cpp
-Database.hpp
-/home/aldo/Documentos/TCC-EVM/src/Database.hpp
-sqlite3.h
--
-iostream
--
-
 /home/aldo/Documentos/TCC-EVM/src/Database.hpp
 string
 -
@@ -56,6 +48,8 @@ opencv2/imgproc.hpp
 deque
 -
 vector
+-
+string
 -
 opencv2/opencv.hpp
 -

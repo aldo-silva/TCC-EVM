@@ -161,7 +161,7 @@ int main(int argc, char* argv[]) {
                 cv::rectangle(frame, cv::Rect(topLeft, bottomRight), cv::Scalar(255, 0, 0), 2);
 
                 // Quando o buffer tiver 300 amostras, calcular HR e SpO2
-                if (signalProcessor.getGreenChannelMeans().size() == 300) {
+                if (signalProcessor.getGreenChannelMeans().size() == 150) {
                     heartRate = signalProcessor.computeHeartRate(fps);
                     spo2 = signalProcessor.computeSpO2();
 
