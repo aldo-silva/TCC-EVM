@@ -50,6 +50,9 @@ private:
     // Interpolação
     std::deque<double> linearInterpolation(const std::deque<double>& signal,
                                            double originalFps, double targetFps);
+
+    double computeRValue();
+    void saveRValue(double R, const std::string& filename);
 };
 
 } // namespace my

@@ -5,7 +5,7 @@
 #include <fftw3.h>
 #include <cmath>    // For M_PI
 #include <fstream>  // For file operations
-#include <iostream> // For std::cerr
+#include <iostream> // For std::cerr, std::cout
 
 namespace my {
 
@@ -50,6 +50,15 @@ void SignalProcessor::addFrameData(const std::vector<cv::Mat>& rgb_channels) {
     saveSignal(redChannelMeans, "/home/aldo/data/redChannelMeans.csv");
     saveSignal(greenChannelMeans, "/home/aldo/data/greenChannelMeans.csv");
     saveSignal(blueChannelMeans, "/home/aldo/data/blueChannelMeans.csv");
+
+    // Calcular e salvar o valor de R
+    double currentR = computeRValue();
+    if (currentR > 0.0) {
+        std::cout << "Valor de R atual: " << currentR << std::endl;
+        saveRValue(currentR, "/home/aldo/data/R_values.csv");
+    } else {
+        std::cout << "Dados insuficientes para calcular R" << std::endl;
+    }
 }
 
 const std::deque<double>& SignalProcessor::getRedChannelMeans() const {
@@ -335,6 +344,47 @@ double SignalProcessor::computeSpO2() {
     if (spo2History.size() > maxBufferSize) spo2History.pop_front();
 
     return spo2;
+}
+
+double SignalProcessor::computeRValue() {
+    // Verifica se há dados suficientes em ambos os canais
+    if (redChannelMeans.size() < 2 || blueChannelMeans.size() < 2) {
+        return -1.0; // Indica "valor inválido" se não houver dados suficientes
+    }
+
+    // Calcula a média (DC) do canal vermelho e azul
+    double redMean = std::accumulate(redChannelMeans.begin(), redChannelMeans.end(), 0.0)
+                     / redChannelMeans.size();
+    double blueMean = std::accumulate(blueChannelMeans.begin(), blueChannelMeans.end(), 0.0)
+                      / blueChannelMeans.size();
+
+    // Calcula o AC como o desvio padrão em cada canal
+    double redSumSq = 0.0;
+    for (double val : redChannelMeans) {
+        redSumSq += (val - redMean) * (val - redMean);
+    }
+    double redAC = std::sqrt(redSumSq / redChannelMeans.size());
+
+    double blueSumSq = 0.0;
+    for (double val : blueChannelMeans) {
+        blueSumSq += (val - blueMean) * (val - blueMean);
+    }
+    double blueAC = std::sqrt(blueSumSq / blueChannelMeans.size());
+
+    // Razão R = (AC/DC do vermelho) / (AC/DC do azul)
+    double R = (redAC / redMean) / (blueAC / blueMean);
+
+    return R;
+}
+
+void SignalProcessor::saveRValue(double R, const std::string& filename) {
+    std::ofstream file(filename, std::ios::app); // Abrir em modo append
+    if (file.is_open()) {
+        file << R << "\n";
+        file.close();
+    } else {
+        std::cerr << "Unable to open file " << filename << " for writing R values." << std::endl;
+    }
 }
 
 void SignalProcessor::reset() {
