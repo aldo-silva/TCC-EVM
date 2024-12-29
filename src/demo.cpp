@@ -87,8 +87,8 @@ int main(int argc, char* argv[]) {
             cv::Mat croppedFace = faceDetector.cropFrame(roi);
             if (!croppedFace.empty()) {
                 // ROI da testa
-                float widthFraction        = 0.5f;
-                float heightFraction       = 0.25f;
+                float widthFraction        = 0.4f;
+                float heightFraction       = 0.2f;
                 float verticalOffsetFrac   = 0.2f;
 
                 int foreheadWidth  = static_cast<int>(roi.width * widthFraction);
