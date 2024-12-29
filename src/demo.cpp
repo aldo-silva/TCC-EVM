@@ -183,7 +183,7 @@ int main(int argc, char* argv[]) {
                     cv::imwrite(fileName, frame);
 
                     std::string relativePath = "captures/" + timestampStr + ".png";
-                    db.insertMeasurement(heartRate, spo2, relativePath)
+                    db.insertMeasurement(heartRate, spo2, relativePath);
 
                     signalProcessor.reset(); // limpa o buffer
                 }
