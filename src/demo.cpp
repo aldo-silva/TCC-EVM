@@ -160,7 +160,7 @@ int main(int argc, char* argv[]) {
                                       roi.y + foreheadY + foreheadHeight);
                 cv::rectangle(frame, cv::Rect(topLeft, bottomRight), cv::Scalar(255, 0, 0), 2);
 
-                // Quando o buffer tiver 300 amostras, calcular HR e SpO2
+                // Quando o buffer tiver 150 amostras, calcular HR e SpO2
                 if (signalProcessor.getGreenChannelMeans().size() == 150) {
                     heartRate = signalProcessor.computeHeartRate(fps);
                     spo2 = signalProcessor.computeSpO2();
@@ -177,11 +177,13 @@ int main(int argc, char* argv[]) {
                     char buffer[100];
                     std::strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H-%M-%S", &tm);
                     std::string timestampStr(buffer);
+
                     std::string fileName = "/home/aldo/data/captures" + timestampStr + ".png";
 
                     cv::imwrite(fileName, frame);
 
-                    db.insertMeasurement(heartRate, spo2, "captures/" + timestampStr + ".png"); 
+                    std::string relativePath = "captures/" + timestampStr + ".png";
+                    db.insertMeasurement(heartRate, spo2, relativePath)
 
                     signalProcessor.reset(); // limpa o buffer
                 }

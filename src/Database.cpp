@@ -65,20 +65,31 @@ bool Database::insertMeasurement(double heartRate, double spo2, const std::strin
         return false;
     }
 
-    // Cria a string SQL para inserir os valores
-    std::string sqlInsert = 
-        "INSERT INTO measurements (heartRate, spo2, framePath) VALUES (" 
-        + std::to_string(heartRate) + ", " 
-        + std::to_string(spo2) + ");";
-        + framePath + "');"; // coloco em aspas simples
-        
-    char* errMsg = nullptr;
-    int rc = sqlite3_exec(reinterpret_cast<sqlite3*>(m_db), sqlInsert.c_str(), nullptr, nullptr, &errMsg);
+    // Prepara a declaração SQL com parâmetros para evitar injeção de SQL
+    const char* sqlInsert = "INSERT INTO measurements (heartRate, spo2, framePath) VALUES (?, ?, ?);";
+    sqlite3_stmt* stmt;
+
+    int rc = sqlite3_prepare_v2(reinterpret_cast<sqlite3*>(m_db), sqlInsert, -1, &stmt, nullptr);
     if (rc != SQLITE_OK) {
-        std::cerr << "Erro ao inserir medição: " << errMsg << std::endl;
-        sqlite3_free(errMsg);
+        std::cerr << "Erro ao preparar declaração SQL: " << sqlite3_errmsg(reinterpret_cast<sqlite3*>(m_db)) << std::endl;
         return false;
     }
+
+    // Bind dos parâmetros
+    sqlite3_bind_double(stmt, 1, heartRate);
+    sqlite3_bind_double(stmt, 2, spo2);
+    sqlite3_bind_text(stmt, 3, framePath.c_str(), -1, SQLITE_TRANSIENT);
+    
+    // Executa a declaração
+    rc = sqlite3_step(stmt);
+    if (rc != SQLITE_DONE) {
+        std::cerr << "Erro ao inserir medição: " << sqlite3_errmsg(reinterpret_cast<sqlite3*>(m_db)) << std::endl;
+        sqlite3_finalize(stmt);
+        return false;
+    }
+
+    // Finaliza a declaração
+    sqlite3_finalize(stmt);
 
     return true;
 }
