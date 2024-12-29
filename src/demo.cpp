@@ -178,7 +178,7 @@ int main(int argc, char* argv[]) {
                     std::strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H-%M-%S", &tm);
                     std::string timestampStr(buffer);
 
-                    std::string fileName = "/home/aldo/data/captures" + timestampStr + ".png";
+                    std::string fileName = "/home/aldo/data/captures/" + timestampStr + ".png";
 
                     cv::imwrite(fileName, frame);
 
