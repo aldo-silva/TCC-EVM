@@ -1,7 +1,9 @@
 import sqlite3
-from flask import Flask, render_template, jsonify
+from flask import Flask, render_template, jsonify, send_from_directory, abort
 
 app = Flask(__name__)
+
+CAPTURES_DIR = "/home/aldo/data/captures"
 
 @app.route('/')
 def index():
@@ -15,7 +17,7 @@ def get_measurements():
     
     # Pegamos as 50 medições mais recentes (ORDER BY id DESC LIMIT 50)
     cursor.execute("""
-        SELECT id, timestamp, heartRate, spo2
+        SELECT id, timestamp, heartRate, spo2, framePath
         FROM measurements
         ORDER BY id DESC
         LIMIT 50
@@ -30,11 +32,19 @@ def get_measurements():
             "id": row[0],
             "timestamp": row[1],
             "heartRate": row[2],
-            "spo2": row[3]
+            "spo2": row[3],
+            "imagePath": row[4]
         })
 
     # Retorna em formato JSON
     return jsonify(measurements)
+
+@app.route('/captures/<filename>')
+def serve_captures(filename):
+    try:
+        return send_from_directory(CAPTURES_DIR, filename)
+    except FileNotFoundError:
+        abort(404)
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=5000, debug=True)

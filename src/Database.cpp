@@ -44,7 +44,8 @@ bool Database::createTable() {
         "   id INTEGER PRIMARY KEY AUTOINCREMENT,"
         "   timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,"
         "   heartRate REAL,"
-        "   spo2 REAL"
+        "   spo2 REAL,"
+        "   framePath TEXT"
         ");";
 
     char* errMsg = nullptr;
@@ -58,7 +59,7 @@ bool Database::createTable() {
     return true;
 }
 
-bool Database::insertMeasurement(double heartRate, double spo2) {
+bool Database::insertMeasurement(double heartRate, double spo2, const std::string& framePath) {
     if (!m_db) {
         std::cerr << "Banco de dados não está aberto!" << std::endl;
         return false;
@@ -66,10 +67,11 @@ bool Database::insertMeasurement(double heartRate, double spo2) {
 
     // Cria a string SQL para inserir os valores
     std::string sqlInsert = 
-        "INSERT INTO measurements (heartRate, spo2) VALUES (" 
+        "INSERT INTO measurements (heartRate, spo2, framePath) VALUES (" 
         + std::to_string(heartRate) + ", " 
         + std::to_string(spo2) + ");";
-
+        + framePath + "');"; // coloco em aspas simples
+        
     char* errMsg = nullptr;
     int rc = sqlite3_exec(reinterpret_cast<sqlite3*>(m_db), sqlInsert.c_str(), nullptr, nullptr, &errMsg);
     if (rc != SQLITE_OK) {

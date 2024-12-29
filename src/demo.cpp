@@ -171,7 +171,17 @@ int main(int argc, char* argv[]) {
                     // Salvar parâmetros intermediários
                     signalProcessor.saveIntermediateParameters("/home/aldo/data/spo2_intermediate_params.csv");
 
-                    db.insertMeasurement(heartRate, spo2);
+                    auto t = std::time(nullptr);
+                    auto tm = *std::localtime(&t);
+
+                    char buffer[100];
+                    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H-%M-%S", &tm);
+                    std::string timestampStr(buffer);
+                    std::string fileName = "/home/aldo/data/captures" + timestampStr + ".png";
+
+                    cv::imwrite(fileName, frame);
+
+                    db.insertMeasurement(heartRate, spo2, "captures/" + timestampStr + ".png"); 
 
                     signalProcessor.reset(); // limpa o buffer
                 }
@@ -192,6 +202,7 @@ int main(int argc, char* argv[]) {
                                 textOrgSpO2, cv::FONT_HERSHEY_SIMPLEX, 0.7,
                                 cv::Scalar(0, 0, 255), 2);
                 }
+                
             }
         }
 

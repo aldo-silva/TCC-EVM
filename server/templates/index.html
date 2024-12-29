@@ -51,6 +51,7 @@
                 <th>Timestamp</th>
                 <th>Heart Rate (bpm)</th>
                 <th>SpO2 (%)</th>
+                <th>Frame</th> <!-- Nova coluna -->
               </tr>
             </thead>
             <tbody>
@@ -62,6 +63,13 @@
               <td>${m.timestamp}</td>
               <td>${m.heartRate}</td>
               <td>${m.spo2}</td>
+              <td>
+                ${
+                  m.imagePath
+                    ? `<img src="/captures/${encodeURIComponent(m.imagePath.split('/').pop())}" style="max-width: 100px;">`
+                    : 'Sem imagem'
+                }
+              </td>
             </tr>
           `;
         }

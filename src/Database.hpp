@@ -20,7 +20,7 @@ public:
     bool createTable();
 
     // Insere uma medição de HR e SpO2
-    bool insertMeasurement(double heartRate, double spo2);
+    bool insertMeasurement(double heartRate, double spo2, const framePath);
 
 private:
     // Ponteiro para a instância do SQLite
