@@ -94,7 +94,7 @@ int main(int argc, char* argv[]) {
                 int foreheadWidth  = static_cast<int>(roi.width * widthFraction);
                 int foreheadHeight = static_cast<int>(roi.height * heightFraction);
 
-                int foreheadX = (roi.width - foreheadWidth) / 2;
+                int foreheadX = (roi.width - foreheadWidth) / 4;
                 int foreheadY = static_cast<int>(roi.height * verticalOffsetFrac);
 
                 cv::Rect foreheadRoi(foreheadX, foreheadY, foreheadWidth, foreheadHeight);
