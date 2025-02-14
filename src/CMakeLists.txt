@@ -16,7 +16,7 @@ link_directories(
 
 # Arquivos fonte e cabeçalhos
 set(SOURCES
-    demo.cpp
+    demo_video_torch.cpp
     ModelLoader.cpp
     DetectionPostProcess.cpp
     FaceDetection.cpp

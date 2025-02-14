@@ -7,18 +7,14 @@
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
 
-
 #define SHOW_FPS (1)
 
 #if SHOW_FPS
 #include <chrono>
 #endif
 
-// Ajuste para sua pipeline GStreamer
-const std::string GSTREAMER_PIPELINE = 
-    "nvarguscamerasrc ! video/x-raw(memory:NVMM), width=(int)640, height=(int)360, format=(string)NV12, framerate=(fraction)30/1 ! "
-    "nvvidconv flip-method=2 ! video/x-raw, format=(string)BGRx ! "
-    "videoconvert ! video/x-raw, format=(string)BGR ! appsink";
+// Defina o caminho para o seu arquivo de vídeo AVI
+const std::string VIDEO_FILE_PATH = "/home/aldo/Documentos/video/build/luz_natural_video_5s.avi";
 
 int main(int argc, char* argv[]) {
     my::FaceDetection faceDetector("/home/aldo/Documentos/media_pipe-main/models");
@@ -32,10 +28,11 @@ int main(int argc, char* argv[]) {
     }
     db.createTable();
 
-    cv::VideoCapture cap(GSTREAMER_PIPELINE, cv::CAP_GSTREAMER);
+    // Inicializando o VideoCapture com o arquivo de vídeo
+    cv::VideoCapture cap(VIDEO_FILE_PATH);
     bool success = cap.isOpened();
     if (!success) {
-        std::cerr << "Não foi possível abrir a câmera." << std::endl;
+        std::cerr << "Não foi possível abrir o arquivo de vídeo." << std::endl;
         return 1;
     }
 
@@ -55,7 +52,7 @@ int main(int argc, char* argv[]) {
     while (true) {
         cv::Mat frame;
         success = cap.read(frame);
-        if (!success) break;
+        if (!success) break;  // Se não for possível ler o próximo frame, saia do loop
 
         cv::flip(frame, frame, 1);
 
@@ -81,7 +78,7 @@ int main(int argc, char* argv[]) {
 
         cv::Rect roi = faceDetector.getFaceRoi();
         if (roi.width > 0 && roi.height > 0) {
-            // Validar ROI dentro da imagem (defensive programming)
+            // Validar ROI dentro da imagem (programação defensiva)
             roi &= cv::Rect(0, 0, frame.cols, frame.rows);
 
             cv::Mat croppedFace = faceDetector.cropFrame(roi);
@@ -162,7 +159,7 @@ int main(int argc, char* argv[]) {
 
                 // Quando o buffer tiver 150 amostras, calcular HR e SpO2
                 if (signalProcessor.getGreenChannelMeans().size() == 150) {
-
+                    
                     auto t = std::time(nullptr);
                     auto tm = *std::localtime(&t);
 
@@ -178,8 +175,6 @@ int main(int argc, char* argv[]) {
 
                     // Salvar parâmetros intermediários
                     signalProcessor.saveIntermediateParameters("/home/aldo/data/spo2_intermediate_params" + timestampStr + ".csv");
-
-
 
                     std::string fileName = "/home/aldo/data/captures/" + timestampStr + ".png";
 

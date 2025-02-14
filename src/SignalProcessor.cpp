@@ -194,29 +194,29 @@ std::deque<double> SignalProcessor::linearInterpolation(const std::deque<double>
 }
 
 // FFT e frequência dominante
-double SignalProcessor::computeDominantFrequency(const std::deque<double>& inputSignal, double fps) {
+double SignalProcessor::computeDominantFrequency(const std::deque<double>& inputSignal, double fps, const std::string& timestamp) {
     if (inputSignal.size() < 2) {
         return -1.0; // Insufficient data
     }
 
     std::deque<double> signal = inputSignal;
-    saveSignal(signal, "/home/aldo/data/raw_signal.csv");
+    saveSignal(signal, "/home/aldo/data/raw_signal_" + timestamp + ".csv");
 
     detrend(signal);
-    saveSignal(signal, "/home/aldo/data/detrended_signal.csv");
+    saveSignal(signal, "/home/aldo/data/detrended_signal_" + timestamp + ".csv");
 
     double targetFps = fps;
     std::deque<double> interpolatedSignal = linearInterpolation(signal, fps, targetFps);
-    saveSignal(interpolatedSignal, "/home/aldo/data/interpolated_signal.csv");
+    saveSignal(interpolatedSignal, "/home/aldo/data/interpolated_signal_" + timestamp + ".csv");
 
     // Substituir o buffer para as etapas seguintes
     signal = interpolatedSignal;
 
     applyHammingWindow(signal);
-    saveSignal(signal, "/home/aldo/data/windowed_signal.csv");
+    saveSignal(signal, "/home/aldo/data/windowed_signal_" + timestamp + ".csv");
 
     normalizeSignal(signal);
-    saveSignal(signal, "/home/aldo/data/normalized_signal.csv");
+    saveSignal(signal, "/home/aldo/data/normalized_signal_" + timestamp + ".csv");
 
     // Prepare data for FFT
     int N = (int)signal.size();
@@ -235,7 +235,7 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
 
     double freqResolution = targetFps / N;
     {
-        std::ofstream magFile("/home/aldo/data/magnitude_spectrum.csv");
+        std::ofstream magFile("/home/aldo/data/magnitude_spectrum_" + timestamp + ".csv");
         if (magFile.is_open()) {
             for (size_t i = 0; i < magnitudes.size(); ++i) {
                 double freq = i * freqResolution;
@@ -249,7 +249,7 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     double maxFrequency = 3.0;
 
     {
-        std::ofstream cutoffFile("/home/aldo/data/cutoff_frequencies.txt");
+        std::ofstream cutoffFile("/home/aldo/data/cutoff_frequencies_" + timestamp + ".txt");
         if (cutoffFile.is_open()) {
             cutoffFile << minFrequency << "," << maxFrequency;
             cutoffFile.close();
@@ -272,7 +272,7 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
     double frequency = max_index * freqResolution; // Hz
 
     {
-        std::ofstream freqFile("/home/aldo/data/dominant_frequency.txt");
+        std::ofstream freqFile("/home/aldo/data/dominant_frequency_" + timestamp + ".txt");
         if (freqFile.is_open()) {
             freqFile << frequency;
             freqFile.close();
@@ -287,8 +287,8 @@ double SignalProcessor::computeDominantFrequency(const std::deque<double>& input
 }
 
 // HeartRate usa canal verde
-double SignalProcessor::computeHeartRate(double fps) {
-    double frequency = computeDominantFrequency(greenChannelMeans, fps);
+double SignalProcessor::computeHeartRate(double fps, const std::string& timestamp) {
+    double frequency = computeDominantFrequency(greenChannelMeans, fps, timestamp);
     if (frequency <= 0.0) {
         return -1.0;
     }
