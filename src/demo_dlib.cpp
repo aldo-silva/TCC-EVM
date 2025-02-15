@@ -133,16 +133,16 @@ int main(int argc, char* argv[]) {
             {
                 // 0: olho E, 1: olho D, 2: nariz, 3: boca E, 4: boca D
                 cv::Point leftEye(
-                    shape.part(0).x(),
-                    shape.part(0).y()
+                    shape.part(4).x(),
+                    shape.part(4).y()
                 );
                 cv::Point rightEye(
-                    shape.part(1).x(),
-                    shape.part(1).y()
-                );
-                cv::Point nose(
                     shape.part(2).x(),
                     shape.part(2).y()
+                );
+                cv::Point nose(
+                    shape.part(5).x(),
+                    shape.part(5).y()
                 );
 
                 // Desenha linha entre olho E e olho D
