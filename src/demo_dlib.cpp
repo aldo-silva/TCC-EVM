@@ -146,17 +146,17 @@ int main(int argc, char* argv[]) {
                 );
 
                 // Desenha linha entre olho E e olho D
-                cv::line(frame, leftEye, rightEye, cv::Scalar(0,255,255), 2);
+                // cv::line(frame, leftEye, rightEye, cv::Scalar(0,255,255), 2);
 
-                cv::circle(frame, leftEye, 3, cv::Scalar(0, 255, 0), -1);  // olho esquerdo
-                cv::circle(frame, rightEye, 3, cv::Scalar(0, 255, 0), -1); // olho direito
-                cv::circle(frame, nose, 3, cv::Scalar(0, 255, 0), -1);     // nariz
+                // cv::circle(frame, leftEye, 3, cv::Scalar(0, 255, 0), -1);  // olho esquerdo
+                // cv::circle(frame, rightEye, 3, cv::Scalar(0, 255, 0), -1); // olho direito
+                // cv::circle(frame, nose, 3, cv::Scalar(0, 255, 0), -1);     // nariz
 
                 // Adiciona os números para identificar os pontos (o número pode ser o índice ou a ordem que preferir)
                 // No exemplo, vamos usar "3" para leftEye, "1" para rightEye e "2" para nose:
-                cv::putText(frame, "3", leftEye, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
-                cv::putText(frame, "1", rightEye, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
-                cv::putText(frame, "2", nose, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
+                // cv::putText(frame, "3", leftEye, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
+                // cv::putText(frame, "1", rightEye, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
+                // cv::putText(frame, "2", nose, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
 
                 // Ponto médio entre os olhos
                 cv::Point eyeMid(
