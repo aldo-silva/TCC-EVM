@@ -137,8 +137,8 @@ int main(int argc, char* argv[]) {
                     shape.part(4).y()
                 );
                 cv::Point rightEye(
-                    shape.part(5).x(),
-                    shape.part(5).y()
+                    shape.part(1).x(),
+                    shape.part(1).y()
                 );
                 cv::Point nose(
                     shape.part(2).x(),
