@@ -20,24 +20,13 @@
 const std::string VIDEO_FILE_PATH = "/home/aldo/Documentos/video/build/luz_natural_video_5s.avi";
 
 // ----------------------------------------------------------
-// Definição da rede CNN conforme o exemplo oficial da dlib
-// (dnn_mmod_face_detection_ex.cpp). Simplificado aqui.
-template <template <typename> class BN, int N, typename SUBNET>
-using block  = BN<dlib::con<N,3,3,1,1,dlib::relu<BN<dlib::con<N,3,3,1,1,SUBNET>>>>>;
+template <long num_filters, typename SUBNET> using con5d = con<num_filters,5,5,2,2,SUBNET>;
+template <long num_filters, typename SUBNET> using con5  = con<num_filters,5,5,1,1,SUBNET>;
 
-// Exemplo de alguns níveis (você pode copiar a definição exata do repositório da dlib, se preferir)
-template <typename SUBNET> using level0 = block<dlib::bn_con, 32, SUBNET>;
-template <typename SUBNET> using level1 = block<dlib::bn_con, 32, level0<SUBNET>>;
-template <typename SUBNET> using level2 = block<dlib::bn_con, 16, level1<SUBNET>>;
-template <typename SUBNET> using level3 = block<dlib::bn_con, 8,  level2<SUBNET>>;
+template <typename SUBNET> using downsampler  = relu<affine<con5d<32, relu<affine<con5d<32, relu<affine<con5d<16,SUBNET>>>>>>>>>;
+template <typename SUBNET> using rcon5  = relu<affine<con5<45,SUBNET>>>;
 
-using net_type = dlib::loss_mmod<dlib::con<1,9,9,1,1,
-                           block<dlib::bn_con,32,
-                           block<dlib::bn_con,32,
-                           block<dlib::bn_con,16,
-                           block<dlib::bn_con,8,
-                           dlib::input_rgb_image_pyramid<dlib::pyramid_down<6>>
-                           >>>>>>;
+using net_type = loss_mmod<con<1,9,9,1,1,rcon5<rcon5<rcon5<downsampler<input_rgb_image_pyramid<pyramid_down<6>>>>>>>>;
 // ----------------------------------------------------------
 
 int main(int argc, char* argv[]) {
