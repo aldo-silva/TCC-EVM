@@ -43,7 +43,7 @@ int main(int argc, char* argv[]) {
 
     // Carregar o shape predictor (CPU)
     dlib::shape_predictor pose_model;
-    dlib::deserialize("/home/aldo/Documentos/TCC-EVM/models/shape_predictor_68_face_landmarks.dat") >> pose_model;
+    dlib::deserialize("/home/aldo/Documentos/TCC-EVM/models/shape_predictor_5_face_landmarks.dat") >> pose_model;
 
     // Carregar o detector de faces baseado em CNN (GPU)
     net_type net;
@@ -128,29 +128,72 @@ int main(int argc, char* argv[]) {
 
             }
 
-            // Encontra os landmarks (shape) para cada rosto detectado (CPU)
-            // dlib::full_object_detection shape = pose_model(cimg, faceRect);
+            // Verifica se temos 5 pontos de fato
+            if (shape.num_parts() == 5)
+            {
+                // 0: olho E, 1: olho D, 2: nariz, 3: boca E, 4: boca D
+                cv::Point leftEye(
+                    shape.part(0).x(),
+                    shape.part(0).y()
+                );
+                cv::Point rightEye(
+                    shape.part(1).x(),
+                    shape.part(1).y()
+                );
+                cv::Point nose(
+                    shape.part(2).x(),
+                    shape.part(2).y()
+                );
 
-            // Exemplo: calcular retângulos da testa e bochecha
-            // (mesma lógica que antes, aproveitando shape.part(...))
-            cv::Point foreheadTop(shape.part(19).x(), shape.part(19).y());
-            cv::Point foreheadBottom(shape.part(24).x(), shape.part(24).y());
-            cv::Rect foreheadROI(foreheadTop, foreheadBottom);
+                // Desenha linha entre olho E e olho D
+                cv::line(frame, leftEye, rightEye, cv::Scalar(0,255,255), 2);
 
-            cv::Point cheekLeft(shape.part(1).x(), shape.part(1).y());
-            cv::Point cheekRight(shape.part(12).x(), shape.part(12).y());
-            cv::Rect cheekROI(cheekLeft, cheekRight);
+                // Ponto médio entre os olhos
+                cv::Point eyeMid(
+                    (leftEye.x + rightEye.x)/2,
+                    (leftEye.y + rightEye.y)/2
+                );
 
-            bool useForehead  = true; 
-            cv::Rect selectedRoi = useForehead ? foreheadROI : cheekROI;
+                // Distância do centro dos olhos até o nariz (em Y ou euclidiana)
+                // Se quiser a distância euclidiana:
+                float distEuclid = cv::norm(cv::Point2f(eyeMid) - cv::Point2f(nose));
 
-            // Ajusta ROI caso exceda o tamanho do frame
-            selectedRoi &= cv::Rect(0, 0, frame.cols, frame.rows);
+                // Vamos criar a ROI da "testa" pegando:
+                // - Largura = distancia horizontal entre os olhos
+                // - Altura  = distEuclid (mesmo valor da linha olho-meio até o nariz)
+                // - Posição  = acima dos olhos (inverte o vetor)
 
-            // Verificar se a ROI é válida
-            if (selectedRoi.width > 1 && selectedRoi.height > 1) {
-                cv::Mat selectedRegion = frame(selectedRoi);
-                if (!selectedRegion.empty()) {
+                int eyeWidth = static_cast<int>(
+                    std::round(cv::norm(cv::Point2f(leftEye) - cv::Point2f(rightEye)))
+                );
+
+                // Se a pessoa estiver normal, o nariz estará abaixo do eyeMid,
+                // logo "subir" distEuclid em Y:
+                // top = eyeMid.y - distEuclid
+                // bottom = eyeMid.y
+                // centerX ~ eyeMid.x - (eyeWidth/2)
+
+                int rectHeight = static_cast<int>(std::round(distEuclid));
+                int rectWidth  = eyeWidth;
+
+                // Podemos alinhar o retângulo no eixo horizontal dos olhos
+                int rectLeft   = eyeMid.x - (rectWidth/2);
+                int rectTop    = eyeMid.y - rectHeight;
+                int rectRight  = rectLeft + rectWidth;
+                int rectBottom = eyeMid.y;
+
+                cv::Rect foreheadROI(
+                    cv::Point(rectLeft,  rectTop),
+                    cv::Point(rectRight, rectBottom)
+                );
+
+                // Ajusta ROI para não sair da imagem
+                foreheadROI &= cv::Rect(0, 0, frame.cols, frame.rows);
+
+                if (foreheadROI.width > 1 && foreheadROI.height > 1)
+                {
+                    cv::Mat selectedRegion = frame(foreheadROI);
+
                     // Converte para YCrCb
                     cv::Mat ycrcb_selected;
                     cv::cvtColor(selectedRegion, ycrcb_selected, cv::COLOR_BGR2YCrCb);
@@ -159,8 +202,9 @@ int main(int argc, char* argv[]) {
                     std::vector<cv::Mat> ycrcb_channels;
                     cv::split(ycrcb_selected, ycrcb_channels);
 
-                    // Checar canal Cb (índice 2)
-                    if (ycrcb_channels.size() == 3 && !ycrcb_channels[2].empty()) {
+                    // Canal Cb = index 2
+                    if (ycrcb_channels.size() == 3 && !ycrcb_channels[2].empty())
+                    {
                         // EVM no canal Cb
                         cv::Mat processed_channel = evm_processor.processChannel(
                             ycrcb_channels[2],
@@ -168,62 +212,50 @@ int main(int argc, char* argv[]) {
                             fps, alpha
                         );
 
-                        if (!processed_channel.empty()) {
-                            // Substitui o canal Cb e converte de volta
+                        if (!processed_channel.empty())
+                        {
                             ycrcb_channels[2] = processed_channel;
-
                             cv::Mat processed_ycrcb;
                             cv::merge(ycrcb_channels, processed_ycrcb);
 
                             cv::Mat processed_bgr;
                             cv::cvtColor(processed_ycrcb, processed_bgr, cv::COLOR_YCrCb2BGR);
 
-                            // Se o tamanho mudou, ajusta
+                            // Ajusta tamanho se mudou
                             if (processed_bgr.size() != selectedRegion.size()) {
                                 cv::resize(processed_bgr, processed_bgr, selectedRegion.size());
                             }
 
-                            // Copia a região processada de volta
-                            processed_bgr.copyTo(frame(selectedRoi));
+                            // Copia de volta
+                            processed_bgr.copyTo(frame(foreheadROI));
 
-                            // Atualizar o processador de sinais
+                            // Atualiza signalProcessor
                             std::vector<cv::Mat> rgb_channels;
                             cv::split(processed_bgr, rgb_channels);
-
                             if (rgb_channels.size() == 3) {
                                 signalProcessor.addFrameData(rgb_channels);
                             }
                         }
                     }
                 }
+
+                // Desenha o retângulo da testa
+                cv::rectangle(frame, foreheadROI, cv::Scalar(255,0,0), 2);
+
+                // Desenha também bounding box do rosto (opcional)
+                cv::Rect faceRectCV(
+                    faceRect.left(),
+                    faceRect.top(),
+                    faceRect.width(),
+                    faceRect.height()
+                );
+                cv::rectangle(frame, faceRectCV, cv::Scalar(0,255,0), 2);
             }
 
-            // Desenhar o retângulo do rosto
-            cv::Rect rectFace(
-                faceRect.left(),
-                faceRect.top(),
-                faceRect.width(),
-                faceRect.height()
-            );
-
-            // Como a ROI foi calculada em coords do shape, ajustamos:
-            cv::Point topLeft(
-                faceRect.left() + selectedRoi.x,
-                faceRect.top()  + selectedRoi.y
-            );
-            cv::Point bottomRight(
-                faceRect.left() + selectedRoi.x + selectedRoi.width,
-                faceRect.top()  + selectedRoi.y + selectedRoi.height
-            );
-
-            cv::rectangle(frame, rectFace, cv::Scalar(0,255,0), 2);  // Rosto
-            cv::rectangle(frame, cv::Rect(topLeft, bottomRight),
-                          cv::Scalar(255, 0, 0), 2);                 // ROI
-        }
+        } // Fim loop faces
 
         // Quando o buffer tiver 150 amostras, calcular HR e SpO2
         if (signalProcessor.getGreenChannelMeans().size() == 150) {
-
             auto t  = std::time(nullptr);
             auto tm = *std::localtime(&t);
 
