@@ -70,6 +70,9 @@ int main(int argc, char* argv[]) {
     double heartRate = 0.0;
     double spo2      = 0.0;
 
+    int frameCounter = 0;
+    dlib::full_object_detection lastShape;
+
     while (true) {
         cv::Mat frame;
         success = cap.read(frame);
@@ -77,6 +80,7 @@ int main(int argc, char* argv[]) {
 
         // Espelha o frame horizontalmente (opcional)
         cv::flip(frame, frame, 1);
+        frameCounter++;
 
     #if SHOW_FPS
         auto start = std::chrono::high_resolution_clock::now();
@@ -108,6 +112,21 @@ int main(int argc, char* argv[]) {
         for (auto& detectedFace : faces) {
             // Extraímos o retângulo (bounding box)
             dlib::rectangle faceRect = detectedFace.rect;
+            dlib::full_object_detection shape;
+
+            if (frameCounter % 150 == 0){
+                shape = pose_model(cimg, facRect);
+                lastShape = shape;
+            }
+            else{
+                if (lastShape.num_parts() == 0){
+                    shape = pose_model(cimg, faceRect);
+                    lastShape = shape;
+                } else{
+                    shape = lastShape;
+                }
+
+            }
 
             // Encontra os landmarks (shape) para cada rosto detectado (CPU)
             dlib::full_object_detection shape = pose_model(cimg, faceRect);
