@@ -105,12 +105,11 @@ int main(int argc, char* argv[]) {
         auto start = std::chrono::high_resolution_clock::now();
     #endif
 
-        // Converte o frame OpenCV -> dlib
-        dlib::cv_image<dlib::bgr_pixel> cimg(frame);
+    dlib::cv_image<dlib::bgr_pixel> cimg(frame);
+    dlib::matrix<dlib::bgr_pixel> dlibFrame;
+    dlib::assign_image(dlibFrame, cimg);
+    std::vector<dlib::mmod_rect> faces = net(dlibFrame);
 
-        // Detecta rostos com o detector CNN (GPU)
-        // Retorna std::vector<dlib::mmod_rect>
-        std::vector<dlib::mmod_rect> faces = net(cimg);
 
     #if SHOW_FPS
         auto stop = std::chrono::high_resolution_clock::now();
