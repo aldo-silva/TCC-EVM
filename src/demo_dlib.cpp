@@ -177,9 +177,9 @@ int main(int argc, char* argv[]) {
                 int rectHeight = eyeWidth;
 
                 // Podemos alinhar o retângulo no eixo horizontal dos olhos
-                int rectLeft   = eyeMid.x;
+                int rectLeft = leftEye.x;
                 int rectTop    = eyeMid.y - rectHeight;
-                int rectRight  = rectLeft;
+                int rectRight = rightEye.x;
                 int rectBottom = eyeMid.y;
 
                 cv::Rect foreheadROI(
