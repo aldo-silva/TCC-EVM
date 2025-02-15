@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # Encontrar pacotes
+set(OpenCV_DIR "/usr/lib/aarch64-linux-gnu/cmake/opencv4") 
 find_package(OpenCV REQUIRED)
 
 # Incluir diretórios para OpenCV

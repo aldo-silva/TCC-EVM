@@ -469,42 +469,11 @@ src/CMakeFiles/demo.dir/SignalProcessor.cpp.o
  /usr/include/opencv4/opencv2/video/background_segm.hpp
  /usr/include/opencv4/opencv2/video/tracking.hpp
  /usr/include/opencv4/opencv2/videoio.hpp
-src/CMakeFiles/demo.dir/demo.cpp.o
+src/CMakeFiles/demo.dir/demo_dlib.cpp.o
  /home/aldo/Documentos/TCC-EVM/src/Database.hpp
- /home/aldo/Documentos/TCC-EVM/src/DetectionPostProcess.hpp
- /home/aldo/Documentos/TCC-EVM/src/FaceDetection.hpp
- /home/aldo/Documentos/TCC-EVM/src/ModelLoader.hpp
  /home/aldo/Documentos/TCC-EVM/src/SignalProcessor.hpp
- /home/aldo/Documentos/TCC-EVM/src/demo.cpp
+ /home/aldo/Documentos/TCC-EVM/src/demo_dlib.cpp
  /home/aldo/Documentos/TCC-EVM/src/evm.hpp
- /home/aldo/tensorflow/tensorflow/lite/allocation.h
- /home/aldo/tensorflow/tensorflow/lite/c/common.h
- /home/aldo/tensorflow/tensorflow/lite/core/api/error_reporter.h
- /home/aldo/tensorflow/tensorflow/lite/core/api/op_resolver.h
- /home/aldo/tensorflow/tensorflow/lite/core/api/profiler.h
- /home/aldo/tensorflow/tensorflow/lite/core/api/verifier.h
- /home/aldo/tensorflow/tensorflow/lite/core/macros.h
- /home/aldo/tensorflow/tensorflow/lite/core/subgraph.h
- /home/aldo/tensorflow/tensorflow/lite/delegates/nnapi/nnapi_delegate.h
- /home/aldo/tensorflow/tensorflow/lite/experimental/resource/resource_base.h
- /home/aldo/tensorflow/tensorflow/lite/external_cpu_backend_context.h
- /home/aldo/tensorflow/tensorflow/lite/interpreter.h
- /home/aldo/tensorflow/tensorflow/lite/interpreter_builder.h
- /home/aldo/tensorflow/tensorflow/lite/memory_planner.h
- /home/aldo/tensorflow/tensorflow/lite/model.h
- /home/aldo/tensorflow/tensorflow/lite/model_builder.h
- /home/aldo/tensorflow/tensorflow/lite/mutable_op_resolver.h
- /home/aldo/tensorflow/tensorflow/lite/nnapi/NeuralNetworksTypes.h
- /home/aldo/tensorflow/tensorflow/lite/nnapi/nnapi_implementation.h
- /home/aldo/tensorflow/tensorflow/lite/portable_type_to_tflitetype.h
- /home/aldo/tensorflow/tensorflow/lite/schema/schema_generated.h
- /home/aldo/tensorflow/tensorflow/lite/stderr_reporter.h
- /home/aldo/tensorflow/tensorflow/lite/string_type.h
- /home/aldo/tensorflow/tensorflow/lite/tools/make/downloads/flatbuffers/include/flatbuffers/base.h
- /home/aldo/tensorflow/tensorflow/lite/tools/make/downloads/flatbuffers/include/flatbuffers/flatbuffers.h
- /home/aldo/tensorflow/tensorflow/lite/tools/make/downloads/flatbuffers/include/flatbuffers/stl_emulation.h
- /home/aldo/tensorflow/tensorflow/lite/type_to_tflitetype.h
- /home/aldo/tensorflow/tensorflow/lite/util.h
  /usr/include/opencv4/opencv2/calib3d.hpp
  /usr/include/opencv4/opencv2/core.hpp
  /usr/include/opencv4/opencv2/core/affine.hpp

@@ -7,6 +7,7 @@
 #include <dlib/image_processing.h>
 #include <dlib/opencv.h>
 #include <dlib/image_io.h>
+#include <dlib/image_processing/frontal_face_detector.h>
 
 #define SHOW_FPS (1)
 
@@ -14,11 +15,8 @@
 #include <chrono>
 #endif
 
-// Ajuste para sua pipeline GStreamer
-const std::string GSTREAMER_PIPELINE = 
-    "nvarguscamerasrc ! video/x-raw(memory:NVMM), width=(int)640, height=(int)360, format=(string)NV12, framerate=(fraction)30/1 ! "
-    "nvvidconv flip-method=2 ! video/x-raw, format=(string)BGRx ! "
-    "videoconvert ! video/x-raw, format=(string)BGR ! appsink";
+
+const std::string VIDEO_FILE_PATH = "/home/aldo/Documentos/video/build/luz_natural_video_5s.avi";
 
 int main(int argc, char* argv[]) {
     my::evm evm_processor;
@@ -34,9 +32,9 @@ int main(int argc, char* argv[]) {
     // Inicialização do dlib
     dlib::frontal_face_detector detector = dlib::get_frontal_face_detector();
     dlib::shape_predictor pose_model;
-    dlib::deserialize("/path/to/shape_predictor_68_face_landmarks.dat") >> pose_model;
+    dlib::deserialize("/home/aldo/Documentos/TCC-EVM/models/shape_predictor_68_face_landmarks.dat") >> pose_model;
 
-    cv::VideoCapture cap(GSTREAMER_PIPELINE, cv::CAP_GSTREAMER);
+    cv::VideoCapture cap(VIDEO_FILE_PATH);
     bool success = cap.isOpened();
     if (!success) {
         std::cerr << "Não foi possível abrir a câmera." << std::endl;
@@ -160,16 +158,34 @@ int main(int argc, char* argv[]) {
             }
 
             // Desenhar o ROI no frame principal
-            cv::rectangle(frame, face, cv::Scalar(0, 255, 0), 2);
-            cv::Point topLeft(face.left() + selectedRoi.x(), face.top() + selectedRoi.y());
-            cv::Point bottomRight(face.left() + selectedRoi.x() + selectedRoi.width(),
-                                  face.top() + selectedRoi.y() + selectedRoi.height());
+            cv::Rect rectFace(
+            face.left(),
+            face.top(),
+            face.width(),
+            face.height()
+            );
+            cv::Point topLeft(face.left() + selectedRoi.x, face.top() + selectedRoi.y);
+
+	    cv::Point bottomRight(
+	    face.left() + selectedRoi.x + selectedRoi.width,
+	    face.top() + selectedRoi.y + selectedRoi.height
+	    );
+
             cv::rectangle(frame, cv::Rect(topLeft, bottomRight), cv::Scalar(255, 0, 0), 2);
         }
 
         // Quando o buffer tiver 150 amostras, calcular HR e SpO2
         if (signalProcessor.getGreenChannelMeans().size() == 150) {
-            heartRate = signalProcessor.computeHeartRate(fps);
+
+            auto t = std::time(nullptr);
+            auto tm = *std::localtime(&t);
+
+            char buffer[100];
+            std::strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H-%M-%S", &tm);
+            std::string timestampStr(buffer);
+
+
+            heartRate = signalProcessor.computeHeartRate(fps, timestampStr);
             spo2 = signalProcessor.computeSpO2();
 
             std::cout << "Estimated Heart Rate: " << heartRate << " bpm" << std::endl;
@@ -178,12 +194,7 @@ int main(int argc, char* argv[]) {
             // Salvar parâmetros intermediários
             signalProcessor.saveIntermediateParameters("/home/aldo/data/spo2_intermediate_params.csv");
 
-            auto t = std::time(nullptr);
-            auto tm = *std::localtime(&t);
 
-            char buffer[100];
-            std::strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H-%M-%S", &tm);
-            std::string timestampStr(buffer);
 
             std::string fileName = "/home/aldo/data/captures/" + timestampStr + ".png";
 

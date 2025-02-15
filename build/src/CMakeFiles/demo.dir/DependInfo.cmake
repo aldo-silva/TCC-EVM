@@ -9,7 +9,7 @@ set(CMAKE_DEPENDS_CHECK_CXX
   "/home/aldo/Documentos/TCC-EVM/src/FaceDetection.cpp" "/home/aldo/Documentos/TCC-EVM/build/src/CMakeFiles/demo.dir/FaceDetection.cpp.o"
   "/home/aldo/Documentos/TCC-EVM/src/ModelLoader.cpp" "/home/aldo/Documentos/TCC-EVM/build/src/CMakeFiles/demo.dir/ModelLoader.cpp.o"
   "/home/aldo/Documentos/TCC-EVM/src/SignalProcessor.cpp" "/home/aldo/Documentos/TCC-EVM/build/src/CMakeFiles/demo.dir/SignalProcessor.cpp.o"
-  "/home/aldo/Documentos/TCC-EVM/src/demo.cpp" "/home/aldo/Documentos/TCC-EVM/build/src/CMakeFiles/demo.dir/demo.cpp.o"
+  "/home/aldo/Documentos/TCC-EVM/src/demo_dlib.cpp" "/home/aldo/Documentos/TCC-EVM/build/src/CMakeFiles/demo.dir/demo_dlib.cpp.o"
   "/home/aldo/Documentos/TCC-EVM/src/evm.cpp" "/home/aldo/Documentos/TCC-EVM/build/src/CMakeFiles/demo.dir/evm.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")

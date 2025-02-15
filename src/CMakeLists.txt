@@ -16,7 +16,7 @@ link_directories(
 
 # Arquivos fonte e cabeçalhos
 set(SOURCES
-    demo_video_torch.cpp
+    demo_dlib.cpp
     ModelLoader.cpp
     DetectionPostProcess.cpp
     FaceDetection.cpp
@@ -36,6 +36,7 @@ set(HEADERS
 # Adiciona o executável
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
+set(OpenCV_DIR "/usr/lib/aarch64-linux-gnu/cmake/opencv4") 
 # Encontrar OpenCV
 find_package(OpenCV REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
@@ -53,6 +54,10 @@ else()
     message(FATAL_ERROR "SQLite3 not found")
 endif()
 
+find_package(dlib REQUIRED)
+include_directories(${dlib_INCLUDE_DIRS})
+
+
 # Linkar bibliotecas
 target_link_libraries(${PROJECT_NAME} PRIVATE 
     ${OpenCV_LIBS}
@@ -61,5 +66,6 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
     pthread
     fftw3f  # Nome da biblioteca diretamente
     fftw3
+    dlib::dlib
 )
 
