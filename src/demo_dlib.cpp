@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
             dlib::full_object_detection shape;
 
             if (frameCounter % 150 == 0){
-                shape = pose_model(cimg, facRect);
+                shape = pose_model(cimg, faceRect);
                 lastShape = shape;
             }
             else{
