@@ -13,7 +13,6 @@
 #include <chrono>
 #endif
 
-// Defina o caminho para o seu arquivo de vídeo AVI
 const std::string VIDEO_FILE_PATH = "/home/aldo/Documentos/video/build/luz_natural_video_5s.avi";
 
 int main(int argc, char* argv[]) {
@@ -28,7 +27,6 @@ int main(int argc, char* argv[]) {
     }
     db.createTable();
 
-    // Inicializando o VideoCapture com o arquivo de vídeo
     cv::VideoCapture cap(VIDEO_FILE_PATH);
     bool success = cap.isOpened();
     if (!success) {
@@ -44,15 +42,19 @@ int main(int argc, char* argv[]) {
 
     float lowFreq = 0.83f;  // Frequência cardíaca mínima (~50 bpm)
     float highFreq = 3.0f;  // Frequência cardíaca máxima (~180 bpm)
-    float alpha = 50.0f;    // Fator de amplificação
+    float alpha   = 50.0f;  // Fator de amplificação
 
     double heartRate = 0.0;
     double spo2 = 0.0;
 
+    // Variáveis estáticas para "congelar" a detecção por 150 frames.
+    static int frameCounter = 0;  
+    static cv::Rect savedRoi(0, 0, 0, 0);  
+
     while (true) {
         cv::Mat frame;
         success = cap.read(frame);
-        if (!success) break;  // Se não for possível ler o próximo frame, saia do loop
+        if (!success) break;
 
         cv::flip(frame, frame, 1);
 
@@ -60,9 +62,13 @@ int main(int argc, char* argv[]) {
         auto start = std::chrono::high_resolution_clock::now();
 #endif
 
-        // Detecção de rosto
-        faceDetector.loadImageToInput(frame);
-        faceDetector.runInference();
+        // Fazemos a detecção somente a cada 150 frames
+        if (frameCounter % 150 == 0) {
+            faceDetector.loadImageToInput(frame);
+            faceDetector.runInference();
+            savedRoi = faceDetector.getFaceRoi();  // Armazena o ROI detectado
+        }
+        frameCounter++;
 
 #if SHOW_FPS
         auto stop = std::chrono::high_resolution_clock::now();
@@ -76,17 +82,19 @@ int main(int argc, char* argv[]) {
                     cv::Scalar(0, 196, 255), 2);
 #endif
 
-        cv::Rect roi = faceDetector.getFaceRoi();
+        // Em vez de usar getFaceRoi() a cada frame, vamos usar o savedRoi
+        cv::Rect roi = savedRoi;
+
         if (roi.width > 0 && roi.height > 0) {
-            // Validar ROI dentro da imagem (programação defensiva)
+            // Evita extrapolar a imagem
             roi &= cv::Rect(0, 0, frame.cols, frame.rows);
 
             cv::Mat croppedFace = faceDetector.cropFrame(roi);
             if (!croppedFace.empty()) {
                 // ROI da testa
-                float widthFraction        = 0.4f;
-                float heightFraction       = 0.2f;
-                float verticalOffsetFrac   = 0.2f;
+                float widthFraction      = 0.4f;
+                float heightFraction     = 0.2f;
+                float verticalOffsetFrac = 0.2f;
 
                 int foreheadWidth  = static_cast<int>(roi.width * widthFraction);
                 int foreheadHeight = static_cast<int>(roi.height * heightFraction);
@@ -96,31 +104,26 @@ int main(int argc, char* argv[]) {
 
                 cv::Rect foreheadRoi(foreheadX, foreheadY, foreheadWidth, foreheadHeight);
 
-                // Ajustar ao croppedFace
+                // Ajustar ao croppedFace (programação defensiva)
                 foreheadRoi &= cv::Rect(0, 0, croppedFace.cols, croppedFace.rows);
 
-                // Verificar se é válido
                 if (foreheadRoi.width > 1 && foreheadRoi.height > 1) {
                     cv::Mat croppedForehead = croppedFace(foreheadRoi);
-                    if (!croppedForehead.empty() &&
-                        croppedForehead.cols > 1 &&
-                        croppedForehead.rows > 1) {
-
+                    if (!croppedForehead.empty()) {
+                        // Conversão para YCrCb
                         cv::Mat ycrcb_forehead;
                         cv::cvtColor(croppedForehead, ycrcb_forehead, cv::COLOR_BGR2YCrCb);
 
                         std::vector<cv::Mat> ycrcb_channels;
                         cv::split(ycrcb_forehead, ycrcb_channels);
 
-                        // Checar canal Cb (índice 2)
+                        // Checamos o canal Cb (índice 2)
                         if (ycrcb_channels.size() == 3 && !ycrcb_channels[2].empty()) {
-                            // Processar o canal Cb
                             cv::Mat processed_channel = evm_processor.processChannel(
                                 ycrcb_channels[2], lowFreq, highFreq, fps, alpha);
 
-                            // Verificar se não está vazio
                             if (!processed_channel.empty()) {
-                                // Substituir e converter de volta
+                                // Substitui e converte de volta
                                 ycrcb_channels[2] = processed_channel;
                                 cv::Mat processed_ycrcb;
                                 cv::merge(ycrcb_channels, processed_ycrcb);
@@ -128,21 +131,17 @@ int main(int argc, char* argv[]) {
                                 cv::Mat processed_bgr;
                                 cv::cvtColor(processed_ycrcb, processed_bgr, cv::COLOR_YCrCb2BGR);
 
-                                // Ajustar tamanho, se necessário
+                                // Ajusta tamanho, se necessário
                                 if (processed_bgr.size() != croppedForehead.size()) {
                                     cv::resize(processed_bgr, processed_bgr, croppedForehead.size());
                                 }
-
                                 processed_bgr.copyTo(croppedFace(foreheadRoi));
 
-                                // Atualizar o processador de sinais
+                                // Atualiza o processador de sinais
                                 std::vector<cv::Mat> rgb_channels;
                                 cv::split(processed_bgr, rgb_channels);
 
-                                if (rgb_channels.size() == 3 &&
-                                    !rgb_channels[0].empty() &&
-                                    !rgb_channels[1].empty() &&
-                                    !rgb_channels[2].empty()) {
+                                if (rgb_channels.size() == 3) {
                                     signalProcessor.addFrameData(rgb_channels);
                                 }
                             }
@@ -150,16 +149,16 @@ int main(int argc, char* argv[]) {
                     }
                 }
 
-                // Desenhar o ROI no frame principal
+                // Desenha retângulos (face e testa)
                 cv::rectangle(frame, roi, cv::Scalar(0, 255, 0), 2);
                 cv::Point topLeft(roi.x + foreheadX, roi.y + foreheadY);
                 cv::Point bottomRight(roi.x + foreheadX + foreheadWidth,
                                       roi.y + foreheadY + foreheadHeight);
-                cv::rectangle(frame, cv::Rect(topLeft, bottomRight), cv::Scalar(255, 0, 0), 2);
+                cv::rectangle(frame, cv::Rect(topLeft, bottomRight),
+                              cv::Scalar(255, 0, 0), 2);
 
                 // Quando o buffer tiver 150 amostras, calcular HR e SpO2
                 if (signalProcessor.getGreenChannelMeans().size() == 150) {
-                    
                     auto t = std::time(nullptr);
                     auto tm = *std::localtime(&t);
 
@@ -168,25 +167,26 @@ int main(int argc, char* argv[]) {
                     std::string timestampStr(buffer);
 
                     heartRate = signalProcessor.computeHeartRate(fps, timestampStr);
-                    spo2 = signalProcessor.computeSpO2();
+                    spo2      = signalProcessor.computeSpO2();
 
                     std::cout << "Estimated Heart Rate: " << heartRate << " bpm" << std::endl;
                     std::cout << "Estimated SpO₂: " << spo2 << "%" << std::endl;
 
-                    // Salvar parâmetros intermediários
-                    signalProcessor.saveIntermediateParameters("/home/aldo/data/spo2_intermediate_params" + timestampStr + ".csv");
+                    // Salva parâmetros intermediários
+                    signalProcessor.saveIntermediateParameters(
+                        "/home/aldo/data/spo2_intermediate_params" + timestampStr + ".csv");
 
                     std::string fileName = "/home/aldo/data/captures/" + timestampStr + ".png";
-
                     cv::imwrite(fileName, frame);
 
                     std::string relativePath = "captures/" + timestampStr + ".png";
                     db.insertMeasurement(heartRate, spo2, relativePath);
 
-                    signalProcessor.reset(); // limpa o buffer
+                    // Limpa o buffer de sinais
+                    signalProcessor.reset();
                 }
 
-                // Mostrar resultados na tela
+                // Mostra HR e SpO2 na tela
                 cv::Point textOrgHR(roi.x, roi.y - 10);
                 cv::Point textOrgSpO2(roi.x, roi.y - 30);
 
@@ -202,7 +202,6 @@ int main(int argc, char* argv[]) {
                                 textOrgSpO2, cv::FONT_HERSHEY_SIMPLEX, 0.7,
                                 cv::Scalar(0, 0, 255), 2);
                 }
-                
             }
         }
 

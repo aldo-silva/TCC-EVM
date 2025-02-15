@@ -24,10 +24,13 @@ const std::string VIDEO_FILE_PATH = "/home/aldo/Documentos/video/build/luz_natur
 template <long num_filters, typename SUBNET> using con5d = con<num_filters,5,5,2,2,SUBNET>;
 template <long num_filters, typename SUBNET> using con5  = con<num_filters,5,5,1,1,SUBNET>;
 
-template <typename SUBNET> using downsampler  = relu<affine<con5d<32, relu<affine<con5d<32, relu<affine<con5d<16,SUBNET>>>>>>>>>;
-template <typename SUBNET> using rcon5  = relu<affine<con5<45,SUBNET>>>;
+template <typename SUBNET> using downsampler  = relu<affine<con5d<32, relu<affine<con5d<32, relu<affine<con5d<16,SUBNET>>>>>>>>>;  
+template <typename SUBNET> using rcon5       = relu<affine<con5<45,SUBNET>>>;
 
-using net_type = loss_mmod<con<1,9,9,1,1,rcon5<rcon5<rcon5<downsampler<input_rgb_image_pyramid<pyramid_down<6>>>>>>>>;
+using net_type = loss_mmod<  
+        con<1,9,9,1,1,  
+        rcon5<rcon5<rcon5<downsampler<  
+        input_rgb_image_pyramid<pyramid_down<6>>>>>>>>;
 // ----------------------------------------------------------
 
 int main(int argc, char* argv[]) {
@@ -58,20 +61,24 @@ int main(int argc, char* argv[]) {
     }
 
 #if SHOW_FPS
-    float sum = 0;
-    int count = 0;
-    float fps = 0;
+    float sum   = 0;
+    int   count = 0;
+    float fps   = 0;
 #endif
 
-    float lowFreq = 0.83f;  // Frequência cardíaca mínima (~50 bpm)
-    float highFreq = 3.0f;  // Frequência cardíaca máxima (~180 bpm)
-    float alpha    = 50.0f; // Fator de amplificação
+    // Parâmetros do EVM
+    float lowFreq  = 0.83f;  // Frequência cardíaca mínima (~50 bpm)
+    float highFreq = 3.0f;   // Frequência cardíaca máxima (~180 bpm)
+    float alpha    = 50.0f;  // Fator de amplificação
 
     double heartRate = 0.0;
     double spo2      = 0.0;
 
     int frameCounter = 0;
     dlib::full_object_detection lastShape;
+
+    // ALTERAÇÃO AQUI: armazenamos a última detecção de faces
+    std::vector<dlib::mmod_rect> lastFaces;
 
     while (true) {
         cv::Mat frame;
@@ -82,18 +89,37 @@ int main(int argc, char* argv[]) {
         cv::flip(frame, frame, 1);
         frameCounter++;
 
-    #if SHOW_FPS
+#if SHOW_FPS
         auto start = std::chrono::high_resolution_clock::now();
-    #endif
+#endif
 
-    dlib::cv_image<dlib::bgr_pixel> cimg(frame);
-    dlib::matrix<dlib::rgb_pixel> dlibFrame;
-    dlib::assign_image(dlibFrame, dlib::cv_image<dlib::bgr_pixel>(frame));
-    std::vector<dlib::mmod_rect> faces = net(dlibFrame);
+        dlib::cv_image<dlib::bgr_pixel> cimg(frame);
+        dlib::matrix<dlib::rgb_pixel> dlibFrame;
+        dlib::assign_image(dlibFrame, cimg);
 
+        // ----------------------------------------------
+        // DETECÇÃO DE ROSTO SOMENTE A CADA 150 FRAMES
+        static std::vector<dlib::mmod_rect> faces;
 
+        if (frameCounter % 150 == 0) {
+            // Faz a detecção normal
+            faces     = net(dlibFrame);
+            lastFaces = faces;  // Salva para reaproveitar
+        } 
+        else {
+            // Se ainda não temos faces salvas ou não detectou no passado
+            if (lastFaces.empty()) {
+                faces     = net(dlibFrame);
+                lastFaces = faces;
+            } 
+            else {
+                // Reaproveita a detecção anterior
+                faces = lastFaces;
+            }
+        }
+        // ----------------------------------------------
 
-    #if SHOW_FPS
+#if SHOW_FPS
         auto stop = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
         float inferenceTime = duration.count() / 1e3;
@@ -106,26 +132,27 @@ int main(int argc, char* argv[]) {
                     cv::FONT_HERSHEY_PLAIN,
                     2, cv::Scalar(0, 196, 255),
                     2);
-    #endif
+#endif
 
-        // Loop pelas detecções
+        // Loop pelas faces detectadas
         for (auto& detectedFace : faces) {
             // Extraímos o retângulo (bounding box)
             dlib::rectangle faceRect = detectedFace.rect;
             dlib::full_object_detection shape;
 
-            if (frameCounter % 150 == 0){
+            // DETECÇÃO DOS LANDMARKS A CADA 150 FRAMES
+            if (frameCounter % 150 == 0) {
                 shape = pose_model(cimg, faceRect);
                 lastShape = shape;
             }
-            else{
-                if (lastShape.num_parts() == 0){
+            else {
+                // Se por acaso ainda não temos lastShape (primeiros frames)
+                if (lastShape.num_parts() == 0) {
                     shape = pose_model(cimg, faceRect);
                     lastShape = shape;
-                } else{
+                } else {
                     shape = lastShape;
                 }
-
             }
 
             // Verifica se temos 5 pontos de fato
@@ -146,17 +173,16 @@ int main(int argc, char* argv[]) {
                 );
 
                 // Desenha linha entre olho E e olho D
-                // cv::line(frame, leftEye, rightEye, cv::Scalar(0,255,255), 2);
+                cv::line(frame, leftEye, rightEye, cv::Scalar(0,255,255), 2);
 
-                // cv::circle(frame, leftEye, 3, cv::Scalar(0, 255, 0), -1);  // olho esquerdo
-                // cv::circle(frame, rightEye, 3, cv::Scalar(0, 255, 0), -1); // olho direito
-                // cv::circle(frame, nose, 3, cv::Scalar(0, 255, 0), -1);     // nariz
+                cv::circle(frame, leftEye, 3, cv::Scalar(0, 255, 0), -1);  // olho esquerdo
+                cv::circle(frame, rightEye, 3, cv::Scalar(0, 255, 0), -1); // olho direito
+                cv::circle(frame, nose, 3, cv::Scalar(0, 255, 0), -1);     // nariz
 
-                // Adiciona os números para identificar os pontos (o número pode ser o índice ou a ordem que preferir)
-                // No exemplo, vamos usar "3" para leftEye, "1" para rightEye e "2" para nose:
-                // cv::putText(frame, "3", leftEye, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
-                // cv::putText(frame, "1", rightEye, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
-                // cv::putText(frame, "2", nose, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
+                // Opção: desenhar índices dos pontos
+                cv::putText(frame, "3", leftEye,  cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
+                cv::putText(frame, "1", rightEye, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
+                cv::putText(frame, "2", nose,     cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
 
                 // Ponto médio entre os olhos
                 cv::Point eyeMid(
@@ -164,32 +190,22 @@ int main(int argc, char* argv[]) {
                     (leftEye.y + rightEye.y)/2
                 );
 
-                // Distância do centro dos olhos até o nariz (em Y ou euclidiana)
-                // Se quiser a distância euclidiana:
+                // Distância euclidiana do centro dos olhos até o nariz
                 float distEuclid = cv::norm(cv::Point2f(eyeMid) - cv::Point2f(nose));
 
-                // Vamos criar a ROI da "testa" pegando:
-                // - Largura = distancia horizontal entre os olhos
-                // - Altura  = distEuclid (mesmo valor da linha olho-meio até o nariz)
-                // - Posição  = acima dos olhos (inverte o vetor)
-
+                // Largura dos olhos
                 int eyeWidth = static_cast<int>(
                     std::round(cv::norm(cv::Point2f(rightEye) - cv::Point2f(leftEye)))
                 );
 
-                // Se a pessoa estiver normal, o nariz estará abaixo do eyeMid,
-                // logo "subir" distEuclid em Y:
-                // top = eyeMid.y - distEuclid
-                // bottom = eyeMid.y
-                // centerX ~ eyeMid.x - (eyeWidth/2)
-
+                // Dimensões do retângulo da "testa"
                 int rectWidth  = static_cast<int>(std::round(distEuclid));
                 int rectHeight = eyeWidth;
 
-                // Podemos alinhar o retângulo no eixo horizontal dos olhos
-                int rectLeft = leftEye.x;
-                int rectTop    = eyeMid.y - rectHeight;
-                int rectRight = rightEye.x;
+                // Coordenadas aproximadas para a ROI na testa
+                int rectLeft   = leftEye.x;
+                int rectTop    = eyeMid.y - rectHeight;  // acima dos olhos
+                int rectRight  = rightEye.x;
                 int rectBottom = eyeMid.y;
 
                 cv::Rect foreheadROI(
@@ -212,7 +228,7 @@ int main(int argc, char* argv[]) {
                     std::vector<cv::Mat> ycrcb_channels;
                     cv::split(ycrcb_selected, ycrcb_channels);
 
-                    // Canal Cb = index 2
+                    // Canal Cb = índice 2
                     if (ycrcb_channels.size() == 3 && !ycrcb_channels[2].empty())
                     {
                         // EVM no canal Cb
@@ -252,7 +268,7 @@ int main(int argc, char* argv[]) {
                 // Desenha o retângulo da testa
                 cv::rectangle(frame, foreheadROI, cv::Scalar(255,0,0), 2);
 
-                // Desenha também bounding box do rosto (opcional)
+                // Desenha também o bounding box do rosto (opcional)
                 cv::Rect faceRectCV(
                     faceRect.left(),
                     faceRect.top(),
@@ -262,7 +278,7 @@ int main(int argc, char* argv[]) {
                 cv::rectangle(frame, faceRectCV, cv::Scalar(0,255,0), 2);
             }
 
-        } // Fim loop faces
+        } // Fim do loop faces
 
         // Quando o buffer tiver 150 amostras, calcular HR e SpO2
         if (signalProcessor.getGreenChannelMeans().size() == 150) {
