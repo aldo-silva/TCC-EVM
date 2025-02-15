@@ -164,7 +164,7 @@ int main(int argc, char* argv[]) {
                 // - Posição  = acima dos olhos (inverte o vetor)
 
                 int eyeWidth = static_cast<int>(
-                    std::round(cv::norm(cv::Point2f(leftEye) - cv::Point2f(rightEye)))
+                    std::round(cv::norm(cv::Point2f(rightEye) - cv::Point2f(leftEye)))
                 );
 
                 // Se a pessoa estiver normal, o nariz estará abaixo do eyeMid,
