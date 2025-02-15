@@ -173,8 +173,8 @@ int main(int argc, char* argv[]) {
                 // bottom = eyeMid.y
                 // centerX ~ eyeMid.x - (eyeWidth/2)
 
-                int rectHeight = static_cast<int>(std::round(distEuclid));
-                int rectWidth  = eyeWidth;
+                int rectWidth  = static_cast<int>(std::round(distEuclid));
+                int rectHeight = eyeWidth;
 
                 // Podemos alinhar o retângulo no eixo horizontal dos olhos
                 int rectLeft   = eyeMid.x - (rectWidth/2);
