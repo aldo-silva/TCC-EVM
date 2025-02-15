@@ -31,26 +31,13 @@ template <typename SUBNET> using level1 = block<dlib::bn_con, 32, level0<SUBNET>
 template <typename SUBNET> using level2 = block<dlib::bn_con, 16, level1<SUBNET>>;
 template <typename SUBNET> using level3 = block<dlib::bn_con, 8,  level2<SUBNET>>;
 
-// A rede final. input_rgb_image_sized<150> é comum ao modelo mmod_human_face_detector.dat
-using net_type = dlib::loss_mmod<
-                    dlib::con<1,9,9,1,1, 
-                      level0<
-                        dlib::max_pool<2,2,2,2, 
-                          level1<
-                            dlib::max_pool<2,2,2,2, 
-                              level2<
-                                dlib::max_pool<2,2,2,2, 
-                                  level3<
-                                    dlib::input_rgb_image_sized<150>
-                                  >
-                                >
-                              >
-                            >
-                          >
-                        >
-                      >
-                    >
-                 >;
+using net_type = dlib::loss_mmod<dlib::con<1,9,9,1,1,
+                           block<dlib::bn_con,32,
+                           block<dlib::bn_con,32,
+                           block<dlib::bn_con,16,
+                           block<dlib::bn_con,8,
+                           dlib::input_rgb_image_pyramid<dlib::pyramid_down<6>>
+                           >>>>>>;
 // ----------------------------------------------------------
 
 int main(int argc, char* argv[]) {
@@ -106,9 +93,10 @@ int main(int argc, char* argv[]) {
     #endif
 
     dlib::cv_image<dlib::bgr_pixel> cimg(frame);
-    dlib::matrix<dlib::bgr_pixel> dlibFrame;
-    dlib::assign_image(dlibFrame, cimg);
+    dlib::matrix<dlib::rgb_pixel> dlibFrame;
+    dlib::assign_image(dlibFrame, dlib::cv_image<dlib::bgr_pixel>(frame));
     std::vector<dlib::mmod_rect> faces = net(dlibFrame);
+
 
 
     #if SHOW_FPS
