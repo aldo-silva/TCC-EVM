@@ -129,7 +129,7 @@ int main(int argc, char* argv[]) {
             }
 
             // Encontra os landmarks (shape) para cada rosto detectado (CPU)
-            dlib::full_object_detection shape = pose_model(cimg, faceRect);
+            // dlib::full_object_detection shape = pose_model(cimg, faceRect);
 
             // Exemplo: calcular retângulos da testa e bochecha
             // (mesma lógica que antes, aproveitando shape.part(...))
