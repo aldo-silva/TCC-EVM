@@ -8,7 +8,8 @@
 #include <dlib/image_processing.h>   // Para shape_predictor
 #include <dlib/opencv.h>
 #include <dlib/image_io.h>
-// #include <dlib/image_processing/frontal_face_detector.h> // Não precisamos mais desse cabeçalho
+// #include <dlib/image_processing/frontal_face_detector.h>
+using namespace dlib;
 
 #define SHOW_FPS (1)
 
