@@ -33,13 +33,13 @@ opencv2/highgui.hpp
 -
 opencv2/imgproc.hpp
 -
+dlib/dnn.h
+-
 dlib/image_processing.h
 -
 dlib/opencv.h
 -
 dlib/image_io.h
--
-dlib/image_processing/frontal_face_detector.h
 -
 chrono
 -

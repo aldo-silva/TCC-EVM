@@ -18,7 +18,7 @@ using namespace dlib;
 #endif
 
 // Caminho do vídeo
-const std::string VIDEO_FILE_PATH = "/home/aldo/Documentos/video/build/luz_natural_video_5s.avi";
+const std::string VIDEO_FILE_PATH = "/home/aldo/Documentos/video/build/luz_natural_video_10s.avi";
 
 // ----------------------------------------------------------
 template <long num_filters, typename SUBNET> using con5d = con<num_filters,5,5,2,2,SUBNET>;
@@ -63,7 +63,7 @@ int main(int argc, char* argv[]) {
 #if SHOW_FPS
     float sum   = 0;
     int   count = 0;
-    float fps   = 0;
+    int fps   = 30;
 #endif
 
     // Parâmetros do EVM
@@ -173,16 +173,16 @@ int main(int argc, char* argv[]) {
                 );
 
                 // Desenha linha entre olho E e olho D
-                cv::line(frame, leftEye, rightEye, cv::Scalar(0,255,255), 2);
+                //cv::line(frame, leftEye, rightEye, cv::Scalar(0,255,255), 2);
 
-                cv::circle(frame, leftEye, 3, cv::Scalar(0, 255, 0), -1);  // olho esquerdo
-                cv::circle(frame, rightEye, 3, cv::Scalar(0, 255, 0), -1); // olho direito
-                cv::circle(frame, nose, 3, cv::Scalar(0, 255, 0), -1);     // nariz
+                //cv::circle(frame, leftEye, 3, cv::Scalar(0, 255, 0), -1);  // olho esquerdo
+                //cv::circle(frame, rightEye, 3, cv::Scalar(0, 255, 0), -1); // olho direito
+                //cv::circle(frame, nose, 3, cv::Scalar(0, 255, 0), -1);     // nariz
 
                 // Opção: desenhar índices dos pontos
-                cv::putText(frame, "3", leftEye,  cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
-                cv::putText(frame, "1", rightEye, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
-                cv::putText(frame, "2", nose,     cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
+                //cv::putText(frame, "3", leftEye,  cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
+                //cv::putText(frame, "1", rightEye, cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
+                //cv::putText(frame, "2", nose,     cv::FONT_HERSHEY_SIMPLEX, 0.5, cv::Scalar(255, 0, 0), 2);
 
                 // Ponto médio entre os olhos
                 cv::Point eyeMid(

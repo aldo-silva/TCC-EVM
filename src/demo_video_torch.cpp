@@ -37,7 +37,7 @@ int main(int argc, char* argv[]) {
 #if SHOW_FPS
     float sum = 0;
     int count = 0;
-    float fps = 0;
+    int fps = 30;
 #endif
 
     float lowFreq = 0.83f;  // Frequência cardíaca mínima (~50 bpm)
@@ -76,7 +76,7 @@ int main(int argc, char* argv[]) {
         float inferenceTime = duration.count() / 1e3;
         sum += inferenceTime;
         count += 1;
-        fps = 1e3f / inferenceTime;
+        //fps = 1e3f / inferenceTime;
         cv::putText(frame, std::to_string(static_cast<int>(fps)) + " FPS",
                     cv::Point(20, 70), cv::FONT_HERSHEY_PLAIN, 2,
                     cv::Scalar(0, 196, 255), 2);

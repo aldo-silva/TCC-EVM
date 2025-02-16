@@ -225,7 +225,7 @@ demo_BINARY_DIR:STATIC=/home/aldo/Documentos/TCC-EVM/build/src
 demo_SOURCE_DIR:STATIC=/home/aldo/Documentos/TCC-EVM/src
 
 //The directory containing a CMake configuration file for dlib.
-dlib_DIR:PATH=/usr/lib/cmake/dlib
+dlib_DIR:PATH=/usr/local/lib/cmake/dlib
 
 //Path to a library.
 dlib_LIBRARIES:FILEPATH=/usr/lib/libdlib.so
@@ -318,6 +318,14 @@ CMAKE_GENERATOR_INSTANCE:INTERNAL=
 CMAKE_GENERATOR_PLATFORM:INTERNAL=
 //Name of generator toolset.
 CMAKE_GENERATOR_TOOLSET:INTERNAL=
+//Test CMAKE_HAVE_LIBC_PTHREAD
+CMAKE_HAVE_LIBC_PTHREAD:INTERNAL=
+//Have library pthreads
+CMAKE_HAVE_PTHREADS_CREATE:INTERNAL=
+//Have library pthread
+CMAKE_HAVE_PTHREAD_CREATE:INTERNAL=1
+//Have include pthread.h
+CMAKE_HAVE_PTHREAD_H:INTERNAL=1
 //Source directory with the top level CMakeLists.txt file for this
 // project
 CMAKE_HOME_DIRECTORY:INTERNAL=/home/aldo/Documentos/TCC-EVM
@@ -387,6 +395,8 @@ CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 FIND_PACKAGE_MESSAGE_DETAILS_OpenCV:INTERNAL=[/usr][v4.1.1()]
 //Details about finding PkgConfig
 FIND_PACKAGE_MESSAGE_DETAILS_PkgConfig:INTERNAL=[/usr/bin/pkg-config][v0.29.1()]
+//Details about finding Threads
+FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 //ADVANCED property for variable: PKG_CONFIG_EXECUTABLE
 PKG_CONFIG_EXECUTABLE-ADVANCED:INTERNAL=1
 SQLITE3_CFLAGS:INTERNAL=
@@ -425,6 +435,8 @@ SQLITE3_sqlite3_LIBDIR:INTERNAL=
 SQLITE3_sqlite3_PREFIX:INTERNAL=
 SQLITE3_sqlite3_VERSION:INTERNAL=
 __pkg_config_checked_SQLITE3:INTERNAL=1
+//ADVANCED property for variable: dlib_LIBRARIES
+dlib_LIBRARIES-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: pkgcfg_lib_SQLITE3_sqlite3
 pkgcfg_lib_SQLITE3_sqlite3-ADVANCED:INTERNAL=1
 prefix_result:INTERNAL=/usr/lib/aarch64-linux-gnu

@@ -6,5 +6,5 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/home/aldo/tensorflow/tensorflow/lite -I/home/aldo/tensorflow/tensorflow/lite/tools/make/downloads/flatbuffers/include -isystem /usr/include/opencv4
 
-CXX_FLAGS = -std=gnu++14
+CXX_FLAGS = -I/usr/include/aarch64-linux-gnu -Wreturn-type -std=gnu++14
 
