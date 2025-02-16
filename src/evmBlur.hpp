@@ -5,6 +5,9 @@
 
 namespace my {
 
+// Forward declaration para evitar expor detalhes da implementação
+class IIRFilter;
+
 class evm {
 public:
     evm() = default;
@@ -17,17 +20,6 @@ public:
      * @return Imagem filtrada.
      */
     cv::Mat applySpatialBlur(const cv::Mat& input, int ksize) const;
-
-    /**
-     * Aplica um filtro IIR band-pass simples para a filtragem temporal.
-     * Neste exemplo, a implementação utiliza dois filtros IIR com parâmetros diferentes,
-     * onde a subtração entre eles aproxima um filtro passa-banda.
-     * @param input Imagem (ou frame) de entrada.
-     * @param lowAlpha Parâmetro do filtro IIR para corte de frequências mais altas.
-     * @param highAlpha Parâmetro do filtro IIR para corte de frequências mais baixas.
-     * @return Imagem filtrada temporalmente.
-     */
-    cv::Mat applyBandPassIIR(const cv::Mat& input, float lowAlpha, float highAlpha);
 
     /**
      * Amplifica a variação do sinal.
@@ -63,6 +55,18 @@ public:
      * @return Canal processado.
      */
     cv::Mat processChannel(const cv::Mat& channel, float alpha);
+
+private:
+    /**
+     * Aplica um filtro IIR band-pass simples para a filtragem temporal.
+     * Neste exemplo, a implementação utiliza dois filtros IIR com parâmetros diferentes,
+     * onde a subtração entre eles aproxima um filtro passa-banda.
+     * @param input Imagem (ou frame) de entrada.
+     * @param iirLow Filtro IIR para corte de frequências mais altas.
+     * @param iirHigh Filtro IIR para corte de frequências mais baixas.
+     * @return Imagem filtrada temporalmente.
+     */
+    cv::Mat applyBandPassIIR(const cv::Mat& input, IIRFilter& iirLow, IIRFilter& iirHigh) const;
 };
 
 } // namespace my

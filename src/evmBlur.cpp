@@ -106,11 +106,8 @@ cv::Mat evm::applyBandPassIIR(const cv::Mat& current, IIRFilter& iirLow, IIRFilt
  * 4) Amplifica
  * 5) Retorna ao tamanho original e adiciona ao canal
  */
-cv::Mat evm::processChannel(const cv::Mat& channel,
-                            float /*lowFreq*/,  // não é usado diretamente no blur
-                            float /*highFreq*/, // idem
-                            float /*fps*/,      // idem
-                            float alpha)
+cv::Mat evm::processChannel(const cv::Mat& channel, float alpha)
+
 {
     // Converter para float [0..255]
     cv::Mat channel_float;
