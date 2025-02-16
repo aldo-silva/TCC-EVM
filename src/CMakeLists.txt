@@ -21,18 +21,18 @@ set(SOURCES
     DetectionPostProcess.cpp
     FaceDetection.cpp
     SignalProcessor.cpp
-    #evm.cpp
+    evm.cpp
     Database.cpp
-    evmBlur.cpp
+    #evmBlur.cpp
 )
 set(HEADERS
     ModelLoader.hpp
     DetectionPostProcess.hpp
     FaceDetection.hpp
     SignalProcessor.hpp
-    #evm.hpp
+    evm.hpp
     Database.hpp
-    evmBlur.hpp
+    #evmBlur.hpp
 )
 
 # Adiciona o executável

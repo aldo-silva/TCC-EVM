@@ -1,4 +1,4 @@
-#include "evmBlur.hpp"
+#include "evm.hpp"
 #include "SignalProcessor.hpp"
 #include "Database.hpp"
 #include <iostream>
@@ -18,7 +18,7 @@ using namespace dlib;
 #endif
 
 // Caminho do vídeo
-const std::string VIDEO_FILE_PATH = "/home/aldo/Documentos/video/build/luz_natural_video_10s.avi";
+//const std::string VIDEO_FILE_PATH = "/home/aldo/Documentos/video/build/luz_natural_video_5s.avi";
 
 // ----------------------------------------------------------
 template <long num_filters, typename SUBNET> using con5d = con<num_filters,5,5,2,2,SUBNET>;
@@ -34,6 +34,13 @@ using net_type = loss_mmod<
 // ----------------------------------------------------------
 
 int main(int argc, char* argv[]) {
+
+    if (argc < 2) {
+        std::cerr << "Uso: " << argv[0] << " <caminho_para_video>" << std::endl;
+        return 1;
+    }
+    std::string VIDEO_FILE_PATH = argv[1];
+
     my::evm evm_processor;
     my::SignalProcessor signalProcessor;
 
@@ -202,11 +209,13 @@ int main(int argc, char* argv[]) {
                 int rectWidth  = static_cast<int>(std::round(distEuclid));
                 int rectHeight = eyeWidth;
 
+		int offset = 25; 
+
                 // Coordenadas aproximadas para a ROI na testa
                 int rectLeft   = leftEye.x;
-                int rectTop    = eyeMid.y - rectHeight;  // acima dos olhos
+                int rectTop    = eyeMid.y - rectHeight - offset;  // acima dos olhos
                 int rectRight  = rightEye.x;
-                int rectBottom = eyeMid.y;
+                int rectBottom = eyeMid.y - offset - 5;
 
                 cv::Rect foreheadROI(
                     cv::Point(rectLeft,  rectTop),
@@ -232,17 +241,17 @@ int main(int argc, char* argv[]) {
                     if (ycrcb_channels.size() == 3 && !ycrcb_channels[2].empty())
                     {
                         // EVM no canal Cb
-                        // cv::Mat processed_channel = evm_processor.processChannel(
-                        //     ycrcb_channels[2],
-                        //     lowFreq, highFreq,
-                        //     fps, alpha
-                        // );
+                         cv::Mat processed_channel = evm_processor.processChannel(
+                             ycrcb_channels[2],
+                             lowFreq, highFreq,
+                             fps, alpha
+                        );
 
                         //evm with blur
-                        cv::Mat processed_channel = evm_processor.processChannel(
-                            ycrcb_channels[2],
-                            alpha
-                        );
+                       // cv::Mat processed_channel = evm_processor.processChannel(
+                           // ycrcb_channels[2],
+                          //  alpha
+                        //);
 
                         if (!processed_channel.empty())
                         {
@@ -275,13 +284,13 @@ int main(int argc, char* argv[]) {
                 cv::rectangle(frame, foreheadROI, cv::Scalar(255,0,0), 2);
 
                 // Desenha também o bounding box do rosto (opcional)
-                cv::Rect faceRectCV(
-                    faceRect.left(),
-                    faceRect.top(),
-                    faceRect.width(),
-                    faceRect.height()
-                );
-                cv::rectangle(frame, faceRectCV, cv::Scalar(0,255,0), 2);
+                //cv::Rect faceRectCV(
+                //    faceRect.left(),
+                //    faceRect.top(),
+                //    faceRect.width(),
+                //    faceRect.height()
+               // );
+               // cv::rectangle(frame, faceRectCV, cv::Scalar(0,255,0), 2);
             }
 
         } // Fim do loop faces
