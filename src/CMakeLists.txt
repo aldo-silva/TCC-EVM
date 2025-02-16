@@ -23,6 +23,7 @@ set(SOURCES
     SignalProcessor.cpp
     evm.cpp
     Database.cpp
+    evmBlur.cpp
 )
 set(HEADERS
     ModelLoader.hpp
@@ -31,6 +32,7 @@ set(HEADERS
     SignalProcessor.hpp
     evm.hpp
     Database.hpp
+    evmBlur.hpp
 )
 
 # Adiciona o executável

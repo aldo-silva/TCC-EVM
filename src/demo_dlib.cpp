@@ -1,4 +1,4 @@
-#include "evm.hpp"
+#include "evmBlur.hpp"
 #include "SignalProcessor.hpp"
 #include "Database.hpp"
 #include <iostream>
@@ -232,10 +232,16 @@ int main(int argc, char* argv[]) {
                     if (ycrcb_channels.size() == 3 && !ycrcb_channels[2].empty())
                     {
                         // EVM no canal Cb
+                        // cv::Mat processed_channel = evm_processor.processChannel(
+                        //     ycrcb_channels[2],
+                        //     lowFreq, highFreq,
+                        //     fps, alpha
+                        // );
+
+                        //evm with blur
                         cv::Mat processed_channel = evm_processor.processChannel(
                             ycrcb_channels[2],
-                            lowFreq, highFreq,
-                            fps, alpha
+                            alpha
                         );
 
                         if (!processed_channel.empty())
