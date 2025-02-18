@@ -11,7 +11,7 @@ namespace my {
 
 class SignalProcessor {
 public:
-    SignalProcessor(size_t bufferSize = 300);
+    SignalProcessor(size_t bufferSize = 150);
     ~SignalProcessor();
 
     void addFrameData(const std::vector<cv::Mat>& rgb_channels);
@@ -20,7 +20,7 @@ public:
     const std::deque<double>& getGreenChannelMeans() const;
     const std::deque<double>& getBlueChannelMeans() const;
 
-    double computeHeartRate(double fps);
+    double computeHeartRate(double fps, const std::string& timestamp);
     double computeSpO2();
 
     void reset();
@@ -44,12 +44,17 @@ private:
     void detrend(std::deque<double>& signal);
     void applyHammingWindow(std::deque<double>& signal);
     void normalizeSignal(std::deque<double>& signal);
-    double computeDominantFrequency(const std::deque<double>& inputSignal, double fps);
+    double computeDominantFrequency(const std::deque<double>& inputSignal,
+                                    double fps,
+                                    const std::string& timestamp);
     void saveSignal(const std::deque<double>& signal, const std::string& filename);
 
     // Interpolação
     std::deque<double> linearInterpolation(const std::deque<double>& signal,
                                            double originalFps, double targetFps);
+
+    double computeRValue();
+    void saveRValue(double R, const std::string& filename);
 };
 
 } // namespace my

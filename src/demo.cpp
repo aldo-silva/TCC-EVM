@@ -2,9 +2,11 @@
 #include "FaceDetection.hpp"
 #include "evm.hpp"
 #include "SignalProcessor.hpp"
+#include "Database.hpp"
 #include <iostream>
 #include <opencv2/highgui.hpp>
 #include <opencv2/imgproc.hpp>
+
 
 #define SHOW_FPS (1)
 
@@ -22,6 +24,13 @@ int main(int argc, char* argv[]) {
     my::FaceDetection faceDetector("/home/aldo/Documentos/media_pipe-main/models");
     my::evm evm_processor;
     my::SignalProcessor signalProcessor;
+
+    Database db;
+    if (!db.open("/home/aldo/Documentos/TCC-EVM/server/measurement.db")) {
+        std::cerr << "Falha ao abrir o banco de dados" << std::endl;
+        return 1;
+    }
+    db.createTable();
 
     cv::VideoCapture cap(GSTREAMER_PIPELINE, cv::CAP_GSTREAMER);
     bool success = cap.isOpened();
@@ -78,8 +87,8 @@ int main(int argc, char* argv[]) {
             cv::Mat croppedFace = faceDetector.cropFrame(roi);
             if (!croppedFace.empty()) {
                 // ROI da testa
-                float widthFraction        = 0.7f;
-                float heightFraction       = 0.25f;
+                float widthFraction        = 0.4f;
+                float heightFraction       = 0.2f;
                 float verticalOffsetFrac   = 0.2f;
 
                 int foreheadWidth  = static_cast<int>(roi.width * widthFraction);
@@ -151,16 +160,33 @@ int main(int argc, char* argv[]) {
                                       roi.y + foreheadY + foreheadHeight);
                 cv::rectangle(frame, cv::Rect(topLeft, bottomRight), cv::Scalar(255, 0, 0), 2);
 
-                // Quando o buffer tiver 300 amostras, calcular HR e SpO2
-                if (signalProcessor.getGreenChannelMeans().size() == 300) {
-                    heartRate = signalProcessor.computeHeartRate(fps);
+                // Quando o buffer tiver 150 amostras, calcular HR e SpO2
+                if (signalProcessor.getGreenChannelMeans().size() == 150) {
+
+                    auto t = std::time(nullptr);
+                    auto tm = *std::localtime(&t);
+
+                    char buffer[100];
+                    std::strftime(buffer, sizeof(buffer), "%Y-%m-%d_%H-%M-%S", &tm);
+                    std::string timestampStr(buffer);
+
+                    heartRate = signalProcessor.computeHeartRate(fps, timestampStr);
                     spo2 = signalProcessor.computeSpO2();
 
                     std::cout << "Estimated Heart Rate: " << heartRate << " bpm" << std::endl;
                     std::cout << "Estimated SpO₂: " << spo2 << "%" << std::endl;
 
                     // Salvar parâmetros intermediários
-                    signalProcessor.saveIntermediateParameters("/home/aldo/data/spo2_intermediate_params.csv");
+                    signalProcessor.saveIntermediateParameters("/home/aldo/data/spo2_intermediate_params" + timestampStr + ".csv");
+
+
+
+                    std::string fileName = "/home/aldo/data/captures/" + timestampStr + ".png";
+
+                    cv::imwrite(fileName, frame);
+
+                    std::string relativePath = "captures/" + timestampStr + ".png";
+                    db.insertMeasurement(heartRate, spo2, relativePath);
 
                     signalProcessor.reset(); // limpa o buffer
                 }
@@ -181,6 +207,7 @@ int main(int argc, char* argv[]) {
                                 textOrgSpO2, cv::FONT_HERSHEY_SIMPLEX, 0.7,
                                 cv::Scalar(0, 0, 255), 2);
                 }
+                
             }
         }
 
@@ -194,5 +221,6 @@ int main(int argc, char* argv[]) {
 
     cap.release();
     cv::destroyAllWindows();
+    db.close();
     return 0;
 }

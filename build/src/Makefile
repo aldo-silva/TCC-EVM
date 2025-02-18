@@ -144,6 +144,33 @@ demo/fast:
 	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/build
 .PHONY : demo/fast
 
+Database.o: Database.cpp.o
+
+.PHONY : Database.o
+
+# target to build an object file
+Database.cpp.o:
+	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/Database.cpp.o
+.PHONY : Database.cpp.o
+
+Database.i: Database.cpp.i
+
+.PHONY : Database.i
+
+# target to preprocess a source file
+Database.cpp.i:
+	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/Database.cpp.i
+.PHONY : Database.cpp.i
+
+Database.s: Database.cpp.s
+
+.PHONY : Database.s
+
+# target to generate assembly for a file
+Database.cpp.s:
+	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/Database.cpp.s
+.PHONY : Database.cpp.s
+
 DetectionPostProcess.o: DetectionPostProcess.cpp.o
 
 .PHONY : DetectionPostProcess.o
@@ -252,32 +279,32 @@ SignalProcessor.cpp.s:
 	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/SignalProcessor.cpp.s
 .PHONY : SignalProcessor.cpp.s
 
-demo.o: demo.cpp.o
+demo_dlib.o: demo_dlib.cpp.o
 
-.PHONY : demo.o
+.PHONY : demo_dlib.o
 
 # target to build an object file
-demo.cpp.o:
-	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/demo.cpp.o
-.PHONY : demo.cpp.o
+demo_dlib.cpp.o:
+	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/demo_dlib.cpp.o
+.PHONY : demo_dlib.cpp.o
 
-demo.i: demo.cpp.i
+demo_dlib.i: demo_dlib.cpp.i
 
-.PHONY : demo.i
+.PHONY : demo_dlib.i
 
 # target to preprocess a source file
-demo.cpp.i:
-	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/demo.cpp.i
-.PHONY : demo.cpp.i
+demo_dlib.cpp.i:
+	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/demo_dlib.cpp.i
+.PHONY : demo_dlib.cpp.i
 
-demo.s: demo.cpp.s
+demo_dlib.s: demo_dlib.cpp.s
 
-.PHONY : demo.s
+.PHONY : demo_dlib.s
 
 # target to generate assembly for a file
-demo.cpp.s:
-	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/demo.cpp.s
-.PHONY : demo.cpp.s
+demo_dlib.cpp.s:
+	cd /home/aldo/Documentos/TCC-EVM/build && $(MAKE) $(MAKESILENT) -f src/CMakeFiles/demo.dir/build.make src/CMakeFiles/demo.dir/demo_dlib.cpp.s
+.PHONY : demo_dlib.cpp.s
 
 evm.o: evm.cpp.o
 
@@ -315,6 +342,9 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... demo"
+	@echo "... Database.o"
+	@echo "... Database.i"
+	@echo "... Database.s"
 	@echo "... DetectionPostProcess.o"
 	@echo "... DetectionPostProcess.i"
 	@echo "... DetectionPostProcess.s"
@@ -327,9 +357,9 @@ help:
 	@echo "... SignalProcessor.o"
 	@echo "... SignalProcessor.i"
 	@echo "... SignalProcessor.s"
-	@echo "... demo.o"
-	@echo "... demo.i"
-	@echo "... demo.s"
+	@echo "... demo_dlib.o"
+	@echo "... demo_dlib.i"
+	@echo "... demo_dlib.s"
 	@echo "... evm.o"
 	@echo "... evm.i"
 	@echo "... evm.s"

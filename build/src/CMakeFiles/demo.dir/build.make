@@ -76,18 +76,18 @@ include src/CMakeFiles/demo.dir/progress.make
 # Include the compile flags for this target's objects.
 include src/CMakeFiles/demo.dir/flags.make
 
-src/CMakeFiles/demo.dir/demo.cpp.o: src/CMakeFiles/demo.dir/flags.make
-src/CMakeFiles/demo.dir/demo.cpp.o: ../src/demo.cpp
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/aldo/Documentos/TCC-EVM/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object src/CMakeFiles/demo.dir/demo.cpp.o"
-	cd /home/aldo/Documentos/TCC-EVM/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/demo.dir/demo.cpp.o -c /home/aldo/Documentos/TCC-EVM/src/demo.cpp
+src/CMakeFiles/demo.dir/demo_dlib.cpp.o: src/CMakeFiles/demo.dir/flags.make
+src/CMakeFiles/demo.dir/demo_dlib.cpp.o: ../src/demo_dlib.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/aldo/Documentos/TCC-EVM/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object src/CMakeFiles/demo.dir/demo_dlib.cpp.o"
+	cd /home/aldo/Documentos/TCC-EVM/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/demo.dir/demo_dlib.cpp.o -c /home/aldo/Documentos/TCC-EVM/src/demo_dlib.cpp
 
-src/CMakeFiles/demo.dir/demo.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/demo.dir/demo.cpp.i"
-	cd /home/aldo/Documentos/TCC-EVM/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/aldo/Documentos/TCC-EVM/src/demo.cpp > CMakeFiles/demo.dir/demo.cpp.i
+src/CMakeFiles/demo.dir/demo_dlib.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/demo.dir/demo_dlib.cpp.i"
+	cd /home/aldo/Documentos/TCC-EVM/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/aldo/Documentos/TCC-EVM/src/demo_dlib.cpp > CMakeFiles/demo.dir/demo_dlib.cpp.i
 
-src/CMakeFiles/demo.dir/demo.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/demo.dir/demo.cpp.s"
-	cd /home/aldo/Documentos/TCC-EVM/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/aldo/Documentos/TCC-EVM/src/demo.cpp -o CMakeFiles/demo.dir/demo.cpp.s
+src/CMakeFiles/demo.dir/demo_dlib.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/demo.dir/demo_dlib.cpp.s"
+	cd /home/aldo/Documentos/TCC-EVM/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/aldo/Documentos/TCC-EVM/src/demo_dlib.cpp -o CMakeFiles/demo.dir/demo_dlib.cpp.s
 
 src/CMakeFiles/demo.dir/ModelLoader.cpp.o: src/CMakeFiles/demo.dir/flags.make
 src/CMakeFiles/demo.dir/ModelLoader.cpp.o: ../src/ModelLoader.cpp
@@ -154,24 +154,39 @@ src/CMakeFiles/demo.dir/evm.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/demo.dir/evm.cpp.s"
 	cd /home/aldo/Documentos/TCC-EVM/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/aldo/Documentos/TCC-EVM/src/evm.cpp -o CMakeFiles/demo.dir/evm.cpp.s
 
+src/CMakeFiles/demo.dir/Database.cpp.o: src/CMakeFiles/demo.dir/flags.make
+src/CMakeFiles/demo.dir/Database.cpp.o: ../src/Database.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir=/home/aldo/Documentos/TCC-EVM/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Building CXX object src/CMakeFiles/demo.dir/Database.cpp.o"
+	cd /home/aldo/Documentos/TCC-EVM/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/demo.dir/Database.cpp.o -c /home/aldo/Documentos/TCC-EVM/src/Database.cpp
+
+src/CMakeFiles/demo.dir/Database.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/demo.dir/Database.cpp.i"
+	cd /home/aldo/Documentos/TCC-EVM/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /home/aldo/Documentos/TCC-EVM/src/Database.cpp > CMakeFiles/demo.dir/Database.cpp.i
+
+src/CMakeFiles/demo.dir/Database.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/demo.dir/Database.cpp.s"
+	cd /home/aldo/Documentos/TCC-EVM/build/src && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /home/aldo/Documentos/TCC-EVM/src/Database.cpp -o CMakeFiles/demo.dir/Database.cpp.s
+
 # Object files for target demo
 demo_OBJECTS = \
-"CMakeFiles/demo.dir/demo.cpp.o" \
+"CMakeFiles/demo.dir/demo_dlib.cpp.o" \
 "CMakeFiles/demo.dir/ModelLoader.cpp.o" \
 "CMakeFiles/demo.dir/DetectionPostProcess.cpp.o" \
 "CMakeFiles/demo.dir/FaceDetection.cpp.o" \
 "CMakeFiles/demo.dir/SignalProcessor.cpp.o" \
-"CMakeFiles/demo.dir/evm.cpp.o"
+"CMakeFiles/demo.dir/evm.cpp.o" \
+"CMakeFiles/demo.dir/Database.cpp.o"
 
 # External object files for target demo
 demo_EXTERNAL_OBJECTS =
 
-src/demo: src/CMakeFiles/demo.dir/demo.cpp.o
+src/demo: src/CMakeFiles/demo.dir/demo_dlib.cpp.o
 src/demo: src/CMakeFiles/demo.dir/ModelLoader.cpp.o
 src/demo: src/CMakeFiles/demo.dir/DetectionPostProcess.cpp.o
 src/demo: src/CMakeFiles/demo.dir/FaceDetection.cpp.o
 src/demo: src/CMakeFiles/demo.dir/SignalProcessor.cpp.o
 src/demo: src/CMakeFiles/demo.dir/evm.cpp.o
+src/demo: src/CMakeFiles/demo.dir/Database.cpp.o
 src/demo: src/CMakeFiles/demo.dir/build.make
 src/demo: /usr/lib/aarch64-linux-gnu/libopencv_dnn.so.4.1.1
 src/demo: /usr/lib/aarch64-linux-gnu/libopencv_gapi.so.4.1.1
@@ -182,14 +197,38 @@ src/demo: /usr/lib/aarch64-linux-gnu/libopencv_photo.so.4.1.1
 src/demo: /usr/lib/aarch64-linux-gnu/libopencv_stitching.so.4.1.1
 src/demo: /usr/lib/aarch64-linux-gnu/libopencv_video.so.4.1.1
 src/demo: /usr/lib/aarch64-linux-gnu/libopencv_videoio.so.4.1.1
+src/demo: /usr/local/lib/libdlib.a
 src/demo: /usr/lib/aarch64-linux-gnu/libopencv_imgcodecs.so.4.1.1
 src/demo: /usr/lib/aarch64-linux-gnu/libopencv_calib3d.so.4.1.1
 src/demo: /usr/lib/aarch64-linux-gnu/libopencv_features2d.so.4.1.1
 src/demo: /usr/lib/aarch64-linux-gnu/libopencv_flann.so.4.1.1
 src/demo: /usr/lib/aarch64-linux-gnu/libopencv_imgproc.so.4.1.1
 src/demo: /usr/lib/aarch64-linux-gnu/libopencv_core.so.4.1.1
+src/demo: /usr/local/cuda/lib64/libcudart_static.a
+src/demo: /usr/lib/aarch64-linux-gnu/librt.so
+src/demo: /usr/lib/aarch64-linux-gnu/libopenblas.so
+src/demo: /usr/lib/aarch64-linux-gnu/libsqlite3.so
+src/demo: /usr/lib/aarch64-linux-gnu/libavdevice.so
+src/demo: /usr/lib/aarch64-linux-gnu/libavfilter.so
+src/demo: /usr/lib/aarch64-linux-gnu/libavformat.so
+src/demo: /usr/lib/aarch64-linux-gnu/libavcodec.so
+src/demo: /usr/lib/aarch64-linux-gnu/libswresample.so
+src/demo: /usr/lib/aarch64-linux-gnu/libswscale.so
+src/demo: /usr/lib/aarch64-linux-gnu/libavutil.so
+src/demo: /usr/lib/aarch64-linux-gnu/libSM.so
+src/demo: /usr/lib/aarch64-linux-gnu/libICE.so
+src/demo: /usr/lib/aarch64-linux-gnu/libX11.so
+src/demo: /usr/lib/aarch64-linux-gnu/libXext.so
+src/demo: /usr/lib/aarch64-linux-gnu/libpng.so
+src/demo: /usr/lib/aarch64-linux-gnu/libz.so
+src/demo: /usr/lib/aarch64-linux-gnu/libjpeg.so
+src/demo: /usr/local/cuda/lib64/libcublas.so
+src/demo: /usr/lib/aarch64-linux-gnu/libcudnn.so
+src/demo: /usr/local/cuda/lib64/libcurand.so
+src/demo: /usr/local/cuda/lib64/libcusolver.so
+src/demo: /usr/local/cuda/lib64/libcudart.so
 src/demo: src/CMakeFiles/demo.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/aldo/Documentos/TCC-EVM/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_7) "Linking CXX executable demo"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir=/home/aldo/Documentos/TCC-EVM/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_8) "Linking CXX executable demo"
 	cd /home/aldo/Documentos/TCC-EVM/build/src && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/demo.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

@@ -27,6 +27,8 @@ deque
 -
 vector
 -
+string
+-
 opencv2/opencv.hpp
 -
 
