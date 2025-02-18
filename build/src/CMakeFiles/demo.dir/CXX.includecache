@@ -6,8 +6,20 @@
 
 #IncludeRegexTransform: 
 
-/home/aldo/Documentos/TCC-EVM/src/Database.hpp
-string
+/home/aldo/Documentos/TCC-EVM/src/SignalProcessor.cpp
+SignalProcessor.hpp
+/home/aldo/Documentos/TCC-EVM/src/SignalProcessor.hpp
+numeric
+-
+algorithm
+-
+fftw3.h
+-
+cmath
+-
+fstream
+-
+iostream
 -
 
 /home/aldo/Documentos/TCC-EVM/src/SignalProcessor.hpp
@@ -17,34 +29,6 @@ vector
 -
 string
 -
-opencv2/opencv.hpp
--
-
-/home/aldo/Documentos/TCC-EVM/src/demo_dlib.cpp
-evm.hpp
-/home/aldo/Documentos/TCC-EVM/src/evm.hpp
-SignalProcessor.hpp
-/home/aldo/Documentos/TCC-EVM/src/SignalProcessor.hpp
-Database.hpp
-/home/aldo/Documentos/TCC-EVM/src/Database.hpp
-iostream
--
-opencv2/highgui.hpp
--
-opencv2/imgproc.hpp
--
-dlib/dnn.h
--
-dlib/image_processing.h
--
-dlib/opencv.h
--
-dlib/image_io.h
--
-chrono
--
-
-/home/aldo/Documentos/TCC-EVM/src/evm.hpp
 opencv2/opencv.hpp
 -
 

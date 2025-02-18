@@ -324,7 +324,7 @@ double SignalProcessor::computeSpO2() {
     double R = (redAC / redMean) / (blueAC / blueMean);
 
     // Fórmula empírica
-    double spo2 = 110.0 - 25.0 * R; 
+    double spo2 = 100.3002 - 133.9134 * R;
     spo2 = std::max(0.0, std::min(100.0, spo2));
 
     // Armazenar nos buffers
