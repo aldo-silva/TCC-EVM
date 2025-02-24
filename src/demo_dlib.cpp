@@ -75,11 +75,11 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    bool success = cap.isOpened();
-    if (!success) {
-        std::cerr << "Não foi possível abrir o vídeo." << std::endl;
-        return 1;
-    }
+    // bool success = cap.isOpened();
+    // if (!success) {
+    //     std::cerr << "Não foi possível abrir o vídeo." << std::endl;
+    //     return 1;
+    // }
 
 #if SHOW_FPS
     float sum   = 0;
