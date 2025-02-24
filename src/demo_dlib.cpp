@@ -122,7 +122,7 @@ int main(int argc, char* argv[]) {
         // DETECÇÃO DE ROSTO SOMENTE A CADA 150 FRAMES
         static std::vector<dlib::mmod_rect> faces;
 
-        if (frameCounter % 150 == 0) {
+        if (frameCounter % 75 == 0) {
             // Faz a detecção normal
             faces     = net(dlibFrame);
             lastFaces = faces;  // Salva para reaproveitar
@@ -162,7 +162,7 @@ int main(int argc, char* argv[]) {
             dlib::full_object_detection shape;
 
             // DETECÇÃO DOS LANDMARKS A CADA 150 FRAMES
-            if (frameCounter % 150 == 0) {
+            if (frameCounter % 75 == 0) {
                 shape = pose_model(cimg, faceRect);
                 lastShape = shape;
             }
@@ -310,7 +310,7 @@ int main(int argc, char* argv[]) {
         } // Fim do loop faces
 
         // Quando o buffer tiver 150 amostras, calcular HR e SpO2
-        if (signalProcessor.getGreenChannelMeans().size() == 150) {
+        if (signalProcessor.getGreenChannelMeans().size() == 75) {
             auto t  = std::time(nullptr);
             auto tm = *std::localtime(&t);
 
