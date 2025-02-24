@@ -33,13 +33,20 @@ using net_type = loss_mmod<
         input_rgb_image_pyramid<pyramid_down<6>>>>>>>>;
 // ----------------------------------------------------------
 
+const std::string GSTREAMER_PIPELINE = 
+    "nvarguscamerasrc ! video/x-raw(memory:NVMM), width=(int)640, height=(int)360, "
+    "format=(string)NV12, framerate=(fraction)30/1 ! "
+    "nvvidconv flip-method=2 ! video/x-raw, format=(string)BGRx ! "
+    "videoconvert ! video/x-raw, format=(string)BGR ! appsink";
+
+
 int main(int argc, char* argv[]) {
 
-    if (argc < 2) {
-        std::cerr << "Uso: " << argv[0] << " <caminho_para_video>" << std::endl;
-        return 1;
-    }
-    std::string VIDEO_FILE_PATH = argv[1];
+    // if (argc < 2) {
+    //     std::cerr << "Uso: " << argv[0] << " <caminho_para_video>" << std::endl;
+    //     return 1;
+    // }
+    // std::string VIDEO_FILE_PATH = argv[1];
 
     my::evm evm_processor;
     my::SignalProcessor signalProcessor;
@@ -60,7 +67,14 @@ int main(int argc, char* argv[]) {
     dlib::deserialize("/home/aldo/Documentos/TCC-EVM/models/mmod_human_face_detector.dat") >> net;
 
     // Abrir captura de vídeo
-    cv::VideoCapture cap(VIDEO_FILE_PATH);
+    // cv::VideoCapture cap(VIDEO_FILE_PATH);
+    cv::VideoCapture cap(GSTREAMER_PIPELINE, cv::CAP_GSTREAMER);
+    bool success = cap.isOpened();
+    if (!success) {
+        std::cerr << "Não foi possível abrir a câmera via GStreamer." << std::endl;
+        return 1;
+    }
+
     bool success = cap.isOpened();
     if (!success) {
         std::cerr << "Não foi possível abrir o vídeo." << std::endl;
